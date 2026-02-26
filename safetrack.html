@@ -182,7 +182,22 @@
                 role_admin: 'Admin',
                 logout: 'Keluar',
                 toast_name_required: 'Silakan masukkan nama Anda',
-                toast_department_required: 'Silakan pilih departemen'
+                toast_department_required: 'Silakan pilih departemen',
+                toast_report_limit: 'Batas maksimum 999 laporan tercapai',
+                btn_submit_inspection: 'Kirim Laporan Inspeksi',
+                btn_submit_report: 'Kirim Laporan',
+                btn_submit_permit: 'Ajukan Permit Kerja',
+                btn_submit_jsa: 'Ajukan JSA',
+                btn_submit_apd: 'Kirim Permintaan APD',
+                btn_submit_suggestion: 'Kirim Saran',
+                option_select_department: 'Pilih Departemen',
+                option_select_category: 'Pilih Kategori',
+                option_select_type: 'Pilih Jenis',
+                option_select_condition: 'Pilih Kondisi',
+                option_select_level: 'Pilih Tingkat',
+                option_select_box_type: 'Pilih Tipe Kotak',
+                toast_send_failed: 'Gagal mengirim laporan',
+                toast_submit_failed: 'Gagal mengirim pengajuan'
             },
             en: {
                 k3_subtitle: 'OHS Reporting System',
@@ -209,7 +224,22 @@
                 role_admin: 'Admin',
                 logout: 'Logout',
                 toast_name_required: 'Please enter your name',
-                toast_department_required: 'Please select a department'
+                toast_department_required: 'Please select a department',
+                toast_report_limit: 'Maximum 999 reports reached',
+                btn_submit_inspection: 'Submit Inspection Report',
+                btn_submit_report: 'Submit Report',
+                btn_submit_permit: 'Submit Work Permit',
+                btn_submit_jsa: 'Submit JSA',
+                btn_submit_apd: 'Submit PPE Request',
+                btn_submit_suggestion: 'Submit Suggestion',
+                option_select_department: 'Select Department',
+                option_select_category: 'Select Category',
+                option_select_type: 'Select Type',
+                option_select_condition: 'Select Condition',
+                option_select_level: 'Select Level',
+                option_select_box_type: 'Select Box Type',
+                toast_send_failed: 'Failed to submit report',
+                toast_submit_failed: 'Failed to submit request'
             }
         };
 
@@ -856,24 +886,24 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">🧯 Inspeksi APAR</h1>
-                        <p class="text-gray-500">Form inspeksi Alat Pemadam Api Ringan</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🧯 APAR Inspection' : '🧯 Inspeksi APAR'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Light Fire Extinguisher inspection form' : 'Form inspeksi Alat Pemadam Api Ringan'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="apar-form" onsubmit="submitInspeksiAPAR(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi APAR</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Gedung A Lt. 2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'APAR Location' : 'Lokasi APAR'}</label>
+                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Building A Floor 2' : 'Contoh: Gedung A Lt. 2'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor APAR</label>
-                                    <input type="text" name="apar_number" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: APAR-001">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'APAR Number' : 'Nomor APAR'}</label>
+                                    <input type="text" name="apar_number" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: APAR-001' : 'Contoh: APAR-001'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis APAR</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'APAR Type' : 'Jenis APAR'}</label>
                                     <select name="apar_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Jenis</option>
+                                        <option value="">${t('option_select_type')}</option>
                                         <option value="Powder">Powder</option>
                                         <option value="CO2">CO2</option>
                                         <option value="Foam">Foam</option>
@@ -881,14 +911,14 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kadaluarsa</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Expiry Date' : 'Tanggal Kadaluarsa'}</label>
                                     <input type="date" name="expiry_date" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Checklist Inspeksi</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'Inspection Checklist' : 'Checklist Inspeksi'}</label>
                                 <div class="space-y-2 bg-gray-50 rounded-lg p-4">
-                                    ${['Segel dalam kondisi baik', 'Pin pengaman terpasang', 'Tekanan dalam kondisi baik (jarum di area hijau)', 'Selang dalam kondisi baik', 'Nozzle tidak tersumbat', 'Label petunjuk terbaca jelas', 'Posisi mudah dijangkau'].map((item, i) => `
+                                    ${(currentLanguage === 'en' ? ['Seal is in good condition', 'Safety pin is installed', 'Pressure is normal (needle in green zone)', 'Hose is in good condition', 'Nozzle is not clogged', 'Instruction label is readable', 'Position is easily accessible'] : ['Segel dalam kondisi baik', 'Pin pengaman terpasang', 'Tekanan dalam kondisi baik (jarum di area hijau)', 'Selang dalam kondisi baik', 'Nozzle tidak tersumbat', 'Label petunjuk terbaca jelas', 'Posisi mudah dijangkau']).map((item, i) => `
                                         <label class="flex items-center gap-3 cursor-pointer">
                                             <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500">
                                             <span class="text-gray-700">${item}</span>
@@ -897,20 +927,20 @@
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi Keseluruhan</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
                                 <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">Pilih Kondisi</option>
-                                    <option value="Baik">Baik</option>
+                                    <option value="">${t('option_select_condition')}</option>
+                                    <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
                                     <option value="Perlu Perbaikan">Perlu Perbaikan</option>
                                     <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
                                 </select>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Tambahkan catatan jika diperlukan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Notes' : 'Catatan'}</label>
+                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add notes if needed' : 'Tambahkan catatan jika diperlukan'}"></textarea>
                             </div>
                             <button type="submit" id="apar-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                Kirim Laporan Inspeksi
+                                ${t('btn_submit_inspection')}
                             </button>
                         </form>
                     </div>
@@ -926,9 +956,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Laporan Inspeksi';
+                btn.innerHTML = t('btn_submit_inspection');
                 return;
             }
 
@@ -949,13 +979,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Laporan Inspeksi';
+            btn.innerHTML = t('btn_submit_inspection');
 
             if (result.isOk) {
-                showToast('Laporan inspeksi APAR berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'APAR inspection report submitted successfully!' : 'Laporan inspeksi APAR berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim laporan', 'error');
+                showToast(t('toast_send_failed'), 'error');
             }
         }
 
@@ -965,33 +995,33 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">🚒 Inspeksi Hydrant</h1>
-                        <p class="text-gray-500">Form inspeksi Hydrant dan Box Hydrant</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🚒 Hydrant Inspection' : '🚒 Inspeksi Hydrant'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Hydrant and hydrant box inspection form' : 'Form inspeksi Hydrant dan Box Hydrant'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="hydrant-form" onsubmit="submitInspeksiHydrant(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Hydrant</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Area Parkir Utara">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Hydrant Location' : 'Lokasi Hydrant'}</label>
+                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: North Parking Area' : 'Contoh: Area Parkir Utara'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor/ID Hydrant</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Hydrant Number/ID' : 'Nomor/ID Hydrant'}</label>
                                     <input type="text" name="hydrant_id" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: HYD-001">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Hydrant</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Hydrant Type' : 'Jenis Hydrant'}</label>
                                     <select name="hydrant_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Jenis</option>
+                                        <option value="">${t('option_select_type')}</option>
                                         <option value="Indoor">Indoor (Box Hydrant)</option>
                                         <option value="Outdoor">Outdoor (Pillar Hydrant)</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Checklist Inspeksi</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'Inspection Checklist' : 'Checklist Inspeksi'}</label>
                                 <div class="space-y-2 bg-gray-50 rounded-lg p-4">
-                                    ${['Box hydrant tidak rusak/berkarat', 'Selang dalam kondisi baik', 'Nozzle berfungsi dengan baik', 'Valve mudah dibuka/ditutup', 'Tekanan air mencukupi', 'Area sekitar bebas hambatan', 'Petunjuk penggunaan terpasang'].map((item, i) => `
+                                    ${(currentLanguage === 'en' ? ['Hydrant box is not damaged/rusted', 'Hose is in good condition', 'Nozzle functions properly', 'Valve is easy to open/close', 'Water pressure is sufficient', 'Surrounding area is unobstructed', 'Usage instructions are available'] : ['Box hydrant tidak rusak/berkarat', 'Selang dalam kondisi baik', 'Nozzle berfungsi dengan baik', 'Valve mudah dibuka/ditutup', 'Tekanan air mencukupi', 'Area sekitar bebas hambatan', 'Petunjuk penggunaan terpasang']).map((item, i) => `
                                         <label class="flex items-center gap-3 cursor-pointer">
                                             <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500">
                                             <span class="text-gray-700">${item}</span>
@@ -1000,20 +1030,20 @@
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi Keseluruhan</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
                                 <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">Pilih Kondisi</option>
-                                    <option value="Baik">Baik</option>
+                                    <option value="">${t('option_select_condition')}</option>
+                                    <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
                                     <option value="Perlu Perbaikan">Perlu Perbaikan</option>
                                     <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
                                 </select>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Tambahkan catatan jika diperlukan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Notes' : 'Catatan'}</label>
+                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add notes if needed' : 'Tambahkan catatan jika diperlukan'}"></textarea>
                             </div>
                             <button type="submit" id="hydrant-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                Kirim Laporan Inspeksi
+                                ${t('btn_submit_inspection')}
                             </button>
                         </form>
                     </div>
@@ -1029,9 +1059,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Laporan Inspeksi';
+                btn.innerHTML = t('btn_submit_inspection');
                 return;
             }
 
@@ -1052,13 +1082,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Laporan Inspeksi';
+            btn.innerHTML = t('btn_submit_inspection');
 
             if (result.isOk) {
-                showToast('Laporan inspeksi Hydrant berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'Hydrant inspection report submitted successfully!' : 'Laporan inspeksi Hydrant berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim laporan', 'error');
+                showToast(t('toast_send_failed'), 'error');
             }
         }
 
@@ -1068,35 +1098,35 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">🩹 Inspeksi P3K</h1>
-                        <p class="text-gray-500">Form inspeksi Kotak P3K sesuai Permenaker No. 15 Tahun 2008</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🩹 First Aid Box Inspection' : '🩹 Inspeksi P3K'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'First aid box inspection form based on Ministerial Regulation No. 15/2008' : 'Form inspeksi Kotak P3K sesuai Permenaker No. 15 Tahun 2008'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="p3k-form" onsubmit="submitInspeksiP3K(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Kotak P3K</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Ruang Produksi A">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'First Aid Box Location' : 'Lokasi Kotak P3K'}</label>
+                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Production Room A' : 'Contoh: Ruang Produksi A'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipe Kotak P3K</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'First Aid Box Type' : 'Tipe Kotak P3K'}</label>
                                     <select name="box_type" required onchange="updateP3KChecklist(this.value)" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Tipe Kotak</option>
-                                        <option value="A">Tipe A (Tenaga Kerja 1-25 orang)</option>
-                                        <option value="B">Tipe B (Tenaga Kerja 26-50 orang)</option>
-                                        <option value="C">Tipe C (Tenaga Kerja 51-100 orang)</option>
+                                        <option value="">${t('option_select_box_type')}</option>
+                                        <option value="A">${currentLanguage === 'en' ? 'Type A (1-25 workers)' : 'Tipe A (Tenaga Kerja 1-25 orang)'}</option>
+                                        <option value="B">${currentLanguage === 'en' ? 'Type B (26-50 workers)' : 'Tipe B (Tenaga Kerja 26-50 orang)'}</option>
+                                        <option value="C">${currentLanguage === 'en' ? 'Type C (51-100 workers)' : 'Tipe C (Tenaga Kerja 51-100 orang)'}</option>
                                     </select>
                                 </div>
                             </div>
                             <div id="p3k-checklist" class="mb-4 hidden">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Checklist Isi Kotak P3K</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'First Aid Box Checklist' : 'Checklist Isi Kotak P3K'}</label>
                                 <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
                                     <table class="w-full text-sm">
                                         <thead>
                                             <tr class="border-b border-gray-200">
-                                                <th class="text-left py-2 font-medium text-gray-700">Isi Kotak</th>
-                                                <th class="text-center py-2 font-medium text-gray-700 w-20">Jumlah</th>
-                                                <th class="text-center py-2 font-medium text-gray-700 w-32">Kondisi</th>
+                                                <th class="text-left py-2 font-medium text-gray-700">${currentLanguage === 'en' ? 'Item' : 'Isi Kotak'}</th>
+                                                <th class="text-center py-2 font-medium text-gray-700 w-20">${currentLanguage === 'en' ? 'Qty' : 'Jumlah'}</th>
+                                                <th class="text-center py-2 font-medium text-gray-700 w-32">${currentLanguage === 'en' ? 'Condition' : 'Kondisi'}</th>
                                             </tr>
                                         </thead>
                                         <tbody id="p3k-items-body"></tbody>
@@ -1104,11 +1134,11 @@
                                 </div>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Tambahan</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Tambahkan catatan jika diperlukan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Additional Notes' : 'Catatan Tambahan'}</label>
+                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add notes if needed' : 'Tambahkan catatan jika diperlukan'}"></textarea>
                             </div>
                             <button type="submit" id="p3k-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                Kirim Laporan Inspeksi
+                                ${t('btn_submit_inspection')}
                             </button>
                         </form>
                     </div>
@@ -1132,8 +1162,8 @@
                     <td class="text-center py-2 font-medium">${item[boxType]}</td>
                     <td class="text-center py-2">
                         <select name="item_${i}" required class="px-2 py-1 border border-gray-200 rounded text-xs bg-white">
-                            <option value="Baik">Baik</option>
-                            <option value="Perlu Isi Ulang">Perlu Isi Ulang</option>
+                            <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
+                            <option value="Perlu Isi Ulang">${currentLanguage === 'en' ? 'Needs Refill' : 'Perlu Isi Ulang'}</option>
                         </select>
                     </td>
                 </tr>
@@ -1148,9 +1178,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Laporan Inspeksi';
+                btn.innerHTML = t('btn_submit_inspection');
                 return;
             }
 
@@ -1185,14 +1215,14 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Laporan Inspeksi';
+            btn.innerHTML = t('btn_submit_inspection');
 
             if (result.isOk) {
-                showToast('Laporan inspeksi P3K berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'First aid box inspection report submitted successfully!' : 'Laporan inspeksi P3K berhasil dikirim!');
                 form.reset();
                 document.getElementById('p3k-checklist').classList.add('hidden');
             } else {
-                showToast('Gagal mengirim laporan', 'error');
+                showToast(t('toast_send_failed'), 'error');
             }
         }
 
@@ -1202,36 +1232,36 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">🔧 Inspeksi Peralatan Kerja</h1>
-                        <p class="text-gray-500">Form inspeksi peralatan dan mesin kerja</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🔧 Work Equipment Inspection' : '🔧 Inspeksi Peralatan Kerja'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Inspection form for tools and machinery' : 'Form inspeksi peralatan dan mesin kerja'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="peralatan-form" onsubmit="submitInspeksiPeralatan(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Peralatan</label>
-                                    <input type="text" name="equipment_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Forklift, Mesin Produksi">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Equipment Name' : 'Nama Peralatan'}</label>
+                                    <input type="text" name="equipment_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Forklift, Production Machine' : 'Contoh: Forklift, Mesin Produksi'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">ID/Nomor Asset</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Asset ID/Number' : 'ID/Nomor Asset'}</label>
                                     <input type="text" name="asset_id" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: AST-001">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
                                     <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">${t('option_select_department')}</option>
                                         ${getDepartmentOptions()}
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Gudang B">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Location' : 'Lokasi'}</label>
+                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Warehouse B' : 'Contoh: Gudang B'}">
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Checklist Inspeksi</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'Inspection Checklist' : 'Checklist Inspeksi'}</label>
                                 <div class="space-y-2 bg-gray-50 rounded-lg p-4">
-                                    ${['Kondisi fisik baik (tidak ada kerusakan)', 'Fungsi operasional normal', 'Sistem keamanan berfungsi', 'Label peringatan terpasang', 'Maintenance terakhir sesuai jadwal', 'Dokumen/sertifikasi lengkap'].map((item, i) => `
+                                    ${(currentLanguage === 'en' ? ['Physical condition is good (no damage)', 'Operational function is normal', 'Safety systems are functioning', 'Warning labels are installed', 'Last maintenance is on schedule', 'Documents/certifications are complete'] : ['Kondisi fisik baik (tidak ada kerusakan)', 'Fungsi operasional normal', 'Sistem keamanan berfungsi', 'Label peringatan terpasang', 'Maintenance terakhir sesuai jadwal', 'Dokumen/sertifikasi lengkap']).map((item, i) => `
                                         <label class="flex items-center gap-3 cursor-pointer">
                                             <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500">
                                             <span class="text-gray-700">${item}</span>
@@ -1240,20 +1270,20 @@
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi Keseluruhan</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
                                 <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">Pilih Kondisi</option>
-                                    <option value="Baik">Baik - Layak Pakai</option>
+                                    <option value="">${t('option_select_condition')}</option>
+                                    <option value="Baik">${currentLanguage === 'en' ? 'Good - Usable' : 'Baik - Layak Pakai'}</option>
                                     <option value="Perlu Perbaikan">Perlu Perbaikan</option>
                                     <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
                                 </select>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan/Temuan</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Jelaskan temuan atau masalah yang ditemukan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Notes/Findings' : 'Catatan/Temuan'}</label>
+                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe findings or problems identified' : 'Jelaskan temuan atau masalah yang ditemukan'}"></textarea>
                             </div>
                             <button type="submit" id="peralatan-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                Kirim Laporan Inspeksi
+                                ${t('btn_submit_inspection')}
                             </button>
                         </form>
                     </div>
@@ -1269,9 +1299,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Laporan Inspeksi';
+                btn.innerHTML = t('btn_submit_inspection');
                 return;
             }
 
@@ -1292,13 +1322,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Laporan Inspeksi';
+            btn.innerHTML = t('btn_submit_inspection');
 
             if (result.isOk) {
-                showToast('Laporan inspeksi peralatan berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'Equipment inspection report submitted successfully!' : 'Laporan inspeksi peralatan berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim laporan', 'error');
+                showToast(t('toast_send_failed'), 'error');
             }
         }
 
@@ -1308,62 +1338,62 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">📋 Permit Kerja</h1>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '📋 Work Permit' : '📋 Permit Kerja'}</h1>
                         <p class="text-gray-500">Form pengajuan izin kerja berbahaya</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="permit-form" onsubmit="submitPermitKerja(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Pekerjaan</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Type' : 'Jenis Pekerjaan'}</label>
                                     <select name="work_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Jenis</option>
+                                        <option value="">${t('option_select_type')}</option>
                                         <option value="Pekerjaan Panas">Pekerjaan Panas (Hot Work)</option>
                                         <option value="Bekerja di Ketinggian">Bekerja di Ketinggian</option>
                                         <option value="Ruang Terbatas">Ruang Terbatas (Confined Space)</option>
                                         <option value="Pekerjaan Listrik">Pekerjaan Listrik</option>
                                         <option value="Penggalian">Penggalian (Excavation)</option>
-                                        <option value="Lainnya">Lainnya</option>
+                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
                                     <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">${t('option_select_department')}</option>
                                         ${getDepartmentOptions()}
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Pekerjaan</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Area Boiler">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Location' : 'Lokasi Pekerjaan'}</label>
+                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Boiler Area' : 'Contoh: Area Boiler'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pelaksanaan</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Date' : 'Tanggal Pelaksanaan'}</label>
                                     <input type="date" name="work_date" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Waktu Mulai</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Start Time' : 'Waktu Mulai'}</label>
                                     <input type="time" name="start_time" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Waktu Selesai</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'End Time' : 'Waktu Selesai'}</label>
                                     <input type="time" name="end_time" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Uraian Pekerjaan</label>
-                                <textarea name="work_description" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Jelaskan detail pekerjaan yang akan dilakukan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Description' : 'Uraian Pekerjaan'}</label>
+                                <textarea name="work_description" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe detailed work to be performed' : 'Jelaskan detail pekerjaan yang akan dilakukan'}"></textarea>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pekerja yang Terlibat</label>
-                                <textarea name="workers" rows="2" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Pisahkan dengan koma, contoh: Budi, Andi, Sari"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Workers Involved' : 'Nama Pekerja yang Terlibat'}</label>
+                                <textarea name="workers" rows="2" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Comma separated, example: John, Sarah, Mike' : 'Pisahkan dengan koma, contoh: Budi, Andi, Sari'}"></textarea>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">APD yang Diperlukan</label>
-                                <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Helm, Sarung tangan, Kacamata safety"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Required PPE' : 'APD yang Diperlukan'}</label>
+                                <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Helmet, Gloves, Safety glasses' : 'Contoh: Helm, Sarung tangan, Kacamata safety'}"></textarea>
                             </div>
                             <button type="submit" id="permit-submit-btn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all">
-                                Ajukan Permit Kerja
+                                ${t('btn_submit_permit')}
                             </button>
                         </form>
                     </div>
@@ -1379,9 +1409,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Ajukan Permit Kerja';
+                btn.innerHTML = t('btn_submit_permit');
                 return;
             }
 
@@ -1402,13 +1432,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Ajukan Permit Kerja';
+            btn.innerHTML = t('btn_submit_permit');
 
             if (result.isOk) {
-                showToast('Pengajuan permit kerja berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'Work permit submitted successfully!' : 'Pengajuan permit kerja berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim pengajuan', 'error');
+                showToast(t('toast_submit_failed'), 'error');
             }
         }
 
@@ -1429,35 +1459,35 @@
                                     <input type="text" name="job_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Perbaikan Mesin Produksi">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
                                     <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">${t('option_select_department')}</option>
                                         ${getDepartmentOptions()}
                                     </select>
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Location' : 'Lokasi'}</label>
                                     <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Area Produksi Line 1">
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Langkah-langkah Pekerjaan</label>
-                                <textarea name="job_steps" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Uraikan langkah-langkah pekerjaan secara berurutan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Job Steps' : 'Langkah-langkah Pekerjaan'}</label>
+                                <textarea name="job_steps" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe job steps in sequence' : 'Uraikan langkah-langkah pekerjaan secara berurutan'}"></textarea>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Potensi Bahaya</label>
-                                <textarea name="hazards" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Identifikasi potensi bahaya dari setiap langkah"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Potential Hazards' : 'Potensi Bahaya'}</label>
+                                <textarea name="hazards" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Identify hazards for each step' : 'Identifikasi potensi bahaya dari setiap langkah'}"></textarea>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tindakan Pencegahan</label>
-                                <textarea name="controls" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Jelaskan tindakan pencegahan untuk setiap bahaya"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Preventive Controls' : 'Tindakan Pencegahan'}</label>
+                                <textarea name="controls" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe preventive controls for each hazard' : 'Jelaskan tindakan pencegahan untuk setiap bahaya'}"></textarea>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">APD yang Diperlukan</label>
-                                <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Helm, Sarung tangan, Safety glasses"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Required PPE' : 'APD yang Diperlukan'}</label>
+                                <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Helmet, Gloves, Safety glasses' : 'Contoh: Helm, Sarung tangan, Safety glasses'}"></textarea>
                             </div>
                             <button type="submit" id="jsa-submit-btn" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all">
-                                Ajukan JSA
+                                ${t('btn_submit_jsa')}
                             </button>
                         </form>
                     </div>
@@ -1473,9 +1503,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Ajukan JSA';
+                btn.innerHTML = t('btn_submit_jsa');
                 return;
             }
 
@@ -1496,13 +1526,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Ajukan JSA';
+            btn.innerHTML = t('btn_submit_jsa');
 
             if (result.isOk) {
-                showToast('Pengajuan JSA berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'JSA submitted successfully!' : 'Pengajuan JSA berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim pengajuan', 'error');
+                showToast(t('toast_submit_failed'), 'error');
             }
         }
 
@@ -1512,8 +1542,8 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">🚨 Laporan Kondisi Tidak Aman</h1>
-                        <p class="text-gray-500">Laporkan kondisi berbahaya yang Anda temukan</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🚨 Unsafe Condition Report' : '🚨 Laporan Kondisi Tidak Aman'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Report any hazardous condition you find' : 'Laporkan kondisi berbahaya yang Anda temukan'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="unsafe-form" onsubmit="submitKondisiTidakAman(event)">
@@ -1521,7 +1551,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
                                     <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Kategori</option>
+                                        <option value="">${t('option_select_category')}</option>
                                         <option value="Lantai Licin">Lantai Licin/Basah</option>
                                         <option value="Instalasi Listrik">Instalasi Listrik Berbahaya</option>
                                         <option value="Kebocoran">Kebocoran (Gas/Cairan)</option>
@@ -1529,40 +1559,40 @@
                                         <option value="Pencahayaan">Pencahayaan Kurang</option>
                                         <option value="Tumpahan Bahan Kimia">Tumpahan Bahan Kimia</option>
                                         <option value="Akses Darurat">Akses Darurat Terhalang</option>
-                                        <option value="Lainnya">Lainnya</option>
+                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Bahaya</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Risk Level' : 'Tingkat Bahaya'}</label>
                                     <select name="severity" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Tingkat</option>
-                                        <option value="Rendah">Rendah - Potensi cedera ringan</option>
-                                        <option value="Sedang">Sedang - Potensi cedera serius</option>
-                                        <option value="Tinggi">Tinggi - Potensi fatal/kritis</option>
+                                        <option value="">${t('option_select_level')}</option>
+                                        <option value="Rendah">${currentLanguage === 'en' ? 'Low - Minor injury potential' : 'Rendah - Potensi cedera ringan'}</option>
+                                        <option value="Sedang">${currentLanguage === 'en' ? 'Medium - Serious injury potential' : 'Sedang - Potensi cedera serius'}</option>
+                                        <option value="Tinggi">${currentLanguage === 'en' ? 'High - Fatal/critical potential' : 'Tinggi - Potensi fatal/kritis'}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
                                     <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">${t('option_select_department')}</option>
                                         ${getDepartmentOptions()}
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Spesifik</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Lantai 2 dekat toilet">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Specific Location' : 'Lokasi Spesifik'}</label>
+                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: 2nd floor near restroom' : 'Contoh: Lantai 2 dekat toilet'}">
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Kondisi</label>
-                                <textarea name="description" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Jelaskan kondisi tidak aman yang Anda temukan secara detail"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Condition Description' : 'Deskripsi Kondisi'}</label>
+                                <textarea name="description" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe the unsafe condition in detail' : 'Jelaskan kondisi tidak aman yang Anda temukan secara detail'}"></textarea>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Saran Perbaikan</label>
-                                <textarea name="suggestion" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Berikan saran untuk memperbaiki kondisi ini (opsional)"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggested Improvement' : 'Saran Perbaikan'}</label>
+                                <textarea name="suggestion" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Provide improvement suggestion (optional)' : 'Berikan saran untuk memperbaiki kondisi ini (opsional)'}"></textarea>
                             </div>
                             <button type="submit" id="unsafe-submit-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all">
-                                Kirim Laporan
+                                ${t('btn_submit_report')}
                             </button>
                         </form>
                     </div>
@@ -1578,9 +1608,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Laporan';
+                btn.innerHTML = t('btn_submit_report');
                 return;
             }
 
@@ -1601,13 +1631,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Laporan';
+            btn.innerHTML = t('btn_submit_report');
 
             if (result.isOk) {
-                showToast('Laporan kondisi tidak aman berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'Unsafe condition report submitted successfully!' : 'Laporan kondisi tidak aman berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim laporan', 'error');
+                showToast(t('toast_send_failed'), 'error');
             }
         }
 
@@ -1617,16 +1647,16 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">🦺 Request APD</h1>
-                        <p class="text-gray-500">Form permintaan Alat Pelindung Diri</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🦺 PPE Request' : '🦺 Request APD'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Personal Protective Equipment request form' : 'Form permintaan Alat Pelindung Diri'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="apd-form" onsubmit="submitRequestAPD(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis APD</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'PPE Type' : 'Jenis APD'}</label>
                                     <select name="apd_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Jenis APD</option>
+                                        <option value="">${currentLanguage === 'en' ? 'Select PPE Type' : 'Pilih Jenis APD'}</option>
                                         <option value="Helm Safety">Helm Safety</option>
                                         <option value="Kacamata Safety">Kacamata Safety</option>
                                         <option value="Masker">Masker</option>
@@ -1636,17 +1666,17 @@
                                         <option value="Rompi Safety">Rompi Safety</option>
                                         <option value="Body Harness">Body Harness</option>
                                         <option value="Respirator">Respirator</option>
-                                        <option value="Lainnya">Lainnya</option>
+                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Quantity' : 'Jumlah'}</label>
                                     <input type="number" name="quantity" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="1">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Ukuran (jika ada)</label>
                                     <select name="size" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Ukuran</option>
+                                        <option value="">${currentLanguage === 'en' ? 'Select Size' : 'Pilih Ukuran'}</option>
                                         <option value="S">S</option>
                                         <option value="M">M</option>
                                         <option value="L">L</option>
@@ -1656,29 +1686,29 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
                                     <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">${t('option_select_department')}</option>
                                         ${getDepartmentOptions()}
                                     </select>
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Permintaan</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Request Reason' : 'Alasan Permintaan'}</label>
                                 <select name="reason" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">Pilih Alasan</option>
-                                    <option value="Baru - Belum Punya">Baru - Belum Punya</option>
-                                    <option value="Penggantian - Rusak">Penggantian - Rusak</option>
-                                    <option value="Penggantian - Hilang">Penggantian - Hilang</option>
-                                    <option value="Penggantian - Tidak Layak">Penggantian - Tidak Layak Pakai</option>
+                                    <option value="">${currentLanguage === 'en' ? 'Select Reason' : 'Pilih Alasan'}</option>
+                                    <option value="Baru - Belum Punya">${currentLanguage === 'en' ? 'New - Not Yet Available' : 'Baru - Belum Punya'}</option>
+                                    <option value="Penggantian - Rusak">${currentLanguage === 'en' ? 'Replacement - Damaged' : 'Penggantian - Rusak'}</option>
+                                    <option value="Penggantian - Hilang">${currentLanguage === 'en' ? 'Replacement - Lost' : 'Penggantian - Hilang'}</option>
+                                    <option value="Penggantian - Tidak Layak">${currentLanguage === 'en' ? 'Replacement - Unusable' : 'Penggantian - Tidak Layak Pakai'}</option>
                                 </select>
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan Tambahan</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Tambahkan keterangan jika diperlukan"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Additional Information' : 'Keterangan Tambahan'}</label>
+                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add information if needed' : 'Tambahkan keterangan jika diperlukan'}"></textarea>
                             </div>
                             <button type="submit" id="apd-submit-btn" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all">
-                                Kirim Permintaan
+                                ${t('btn_submit_apd')}
                             </button>
                         </form>
                     </div>
@@ -1694,9 +1724,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Permintaan';
+                btn.innerHTML = t('btn_submit_apd');
                 return;
             }
 
@@ -1717,13 +1747,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Permintaan';
+            btn.innerHTML = t('btn_submit_apd');
 
             if (result.isOk) {
-                showToast('Permintaan APD berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'PPE request submitted successfully!' : 'Permintaan APD berhasil dikirim!');
                 form.reset();
             } else {
-                showToast('Gagal mengirim permintaan', 'error');
+                showToast(t('toast_submit_failed'), 'error');
             }
         }
 
@@ -1733,46 +1763,46 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">💬 Saran Lainnya</h1>
-                        <p class="text-gray-500">Berikan saran, masukan, atau ide untuk perbaikan K3</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '💬 Other Suggestions' : '💬 Saran Lainnya'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Provide suggestions and ideas for safety improvements' : 'Berikan saran, masukan, atau ide untuk perbaikan K3'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="saran-form" onsubmit="submitSaranLainnya(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Saran</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggestion Category' : 'Kategori Saran'}</label>
                                     <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Kategori</option>
-                                        <option value="Perbaikan Prosedur K3">Perbaikan Prosedur K3</option>
-                                        <option value="Fasilitas K3">Fasilitas K3</option>
-                                        <option value="Pelatihan K3">Pelatihan K3</option>
-                                        <option value="Pengecekan Rutin">Pengecekan Rutin</option>
-                                        <option value="Perilaku Kerja Aman">Perilaku Kerja Aman</option>
-                                        <option value="Lainnya">Lainnya</option>
+                                        <option value="">${t('option_select_category')}</option>
+                                        <option value="Perbaikan Prosedur K3">${currentLanguage === 'en' ? 'Safety Procedure Improvement' : 'Perbaikan Prosedur K3'}</option>
+                                        <option value="Fasilitas K3">${currentLanguage === 'en' ? 'Safety Facilities' : 'Fasilitas K3'}</option>
+                                        <option value="Pelatihan K3">${currentLanguage === 'en' ? 'Safety Training' : 'Pelatihan K3'}</option>
+                                        <option value="Pengecekan Rutin">${currentLanguage === 'en' ? 'Routine Inspection' : 'Pengecekan Rutin'}</option>
+                                        <option value="Perilaku Kerja Aman">${currentLanguage === 'en' ? 'Safe Work Behavior' : 'Perilaku Kerja Aman'}</option>
+                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
                                     <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">${t('option_select_department')}</option>
                                         ${getDepartmentOptions()}
                                     </select>
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi/Area (Opsional)</label>
-                                <input type="text" name="location" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Area Produksi, Gudang, Kantor">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Location/Area (Optional)' : 'Lokasi/Area (Opsional)'}</label>
+                                <input type="text" name="location" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Production Area, Warehouse, Office' : 'Contoh: Area Produksi, Gudang, Kantor'}">
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Judul Saran</label>
-                                <input type="text" name="title" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Tambahan lampu di area kerja">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggestion Title' : 'Judul Saran'}</label>
+                                <input type="text" name="title" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Add more lighting in work area' : 'Contoh: Tambahan lampu di area kerja'}">
                             </div>
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Uraian Saran</label>
-                                <textarea name="suggestion" rows="5" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Jelaskan saran atau ide Anda secara detail untuk meningkatkan K3 di tempat kerja"></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggestion Details' : 'Uraian Saran'}</label>
+                                <textarea name="suggestion" rows="5" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe your suggestion in detail to improve workplace safety' : 'Jelaskan saran atau ide Anda secara detail untuk meningkatkan K3 di tempat kerja'}"></textarea>
                             </div>
                             <button type="submit" id="saran-submit-btn" class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all">
-                                Kirim Saran
+                                ${t('btn_submit_suggestion')}
                             </button>
                         </form>
                     </div>
@@ -1788,9 +1818,9 @@
             btn.innerHTML = '<div class="loader mx-auto"></div>';
 
             if (allReports.length >= 999) {
-                showToast('Batas maksimum 999 laporan tercapai', 'error');
+                showToast(t('toast_report_limit'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = 'Kirim Saran';
+                btn.innerHTML = t('btn_submit_suggestion');
                 return;
             }
 
@@ -1811,13 +1841,13 @@
 
             const result = await createReport(data);
             btn.disabled = false;
-            btn.innerHTML = 'Kirim Saran';
+            btn.innerHTML = t('btn_submit_suggestion');
 
             if (result.isOk) {
-                showToast('Saran Anda berhasil dikirim! Terima kasih atas masukan berharga Anda.');
+                showToast(currentLanguage === 'en' ? 'Your suggestion has been submitted! Thank you for your valuable feedback.' : 'Saran Anda berhasil dikirim! Terima kasih atas masukan berharga Anda.');
                 form.reset();
             } else {
-                showToast('Gagal mengirim saran', 'error');
+                showToast(t('toast_submit_failed'), 'error');
             }
         }
 
@@ -1855,7 +1885,7 @@
                                 <option value="Diproses">Diproses</option>
                                 <option value="Selesai">Selesai</option>
                                 <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                <option value="Perlu Isi Ulang">Perlu Isi Ulang</option>
+                                <option value="Perlu Isi Ulang">${currentLanguage === 'en' ? 'Needs Refill' : 'Perlu Isi Ulang'}</option>
                             </select>
                         </div>
                     </div>
