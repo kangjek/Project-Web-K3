@@ -207,10 +207,10 @@
                     }))
                 };
 
-                const response = await fetch(GOOGLE_SHEETS_API, {
+                await fetch(GOOGLE_SHEETS_API, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
                 
@@ -218,6 +218,62 @@
             } catch (error) {
                 console.error('Sync to Google Sheets failed:', error);
             }
+        }
+
+
+
+        const LOCAL_REPORTS_KEY = 'safetrack_reports';
+
+        function loadLocalReports() {
+            try {
+                const raw = localStorage.getItem(LOCAL_REPORTS_KEY);
+                allReports = raw ? JSON.parse(raw) : [];
+            } catch (error) {
+                console.error('Gagal memuat data lokal:', error);
+                allReports = [];
+            }
+        }
+
+        function persistLocalReports() {
+            localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(allReports));
+        }
+
+        function generateBackendId() {
+            return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
+        async function createReport(data) {
+            if (window.dataSdk?.create) return await window.dataSdk.create(data);
+
+            const report = { ...data, __backendId: generateBackendId() };
+            allReports = [report, ...allReports];
+            persistLocalReports();
+            syncToGoogleSheets(allReports);
+            if (currentPage === 'dashboard') renderDashboard();
+            if (currentPage === 'manage-reports') renderManageReports();
+            return { isOk: true, value: report };
+        }
+
+        async function updateReport(report) {
+            if (window.dataSdk?.update) return await window.dataSdk.update(report);
+
+            allReports = allReports.map(r => r.__backendId === report.__backendId ? report : r);
+            persistLocalReports();
+            syncToGoogleSheets(allReports);
+            if (currentPage === 'dashboard') renderDashboard();
+            if (currentPage === 'manage-reports') renderManageReports();
+            return { isOk: true, value: report };
+        }
+
+        async function deleteReport(report) {
+            if (window.dataSdk?.delete) return await window.dataSdk.delete(report);
+
+            allReports = allReports.filter(r => r.__backendId !== report.__backendId);
+            persistLocalReports();
+            syncToGoogleSheets(allReports);
+            if (currentPage === 'dashboard') renderDashboard();
+            if (currentPage === 'manage-reports') renderManageReports();
+            return { isOk: true };
         }
 
         // Data Handler for SDK
@@ -261,7 +317,10 @@
                 const result = await window.dataSdk.init(dataHandler);
                 if (!result.isOk) {
                     console.error('Failed to initialize data SDK');
+                    loadLocalReports();
                 }
+            } else {
+                loadLocalReports();
             }
         }
 
@@ -766,7 +825,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Laporan Inspeksi';
 
@@ -869,7 +928,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Laporan Inspeksi';
 
@@ -1002,7 +1061,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Laporan Inspeksi';
 
@@ -1109,7 +1168,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Laporan Inspeksi';
 
@@ -1219,7 +1278,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Ajukan Permit Kerja';
 
@@ -1313,7 +1372,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Ajukan JSA';
 
@@ -1418,7 +1477,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Laporan';
 
@@ -1534,7 +1593,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Permintaan';
 
@@ -1628,7 +1687,7 @@
                 completed_date: ''
             };
 
-            const result = await window.dataSdk.create(data);
+            const result = await createReport(data);
             btn.disabled = false;
             btn.innerHTML = 'Kirim Saran';
 
@@ -1837,7 +1896,7 @@
                 completed_date: form.status.value === 'Selesai' ? new Date().toISOString().split('T')[0] : ''
             };
             
-            const result = await window.dataSdk.update(updatedReport);
+            const result = await updateReport(updatedReport);
             btn.disabled = false;
             btn.innerHTML = 'Simpan';
             
@@ -1884,7 +1943,7 @@
             const report = allReports.find(r => r.__backendId === deleteConfirmId);
             if (!report) return;
             
-            const result = await window.dataSdk.delete(report);
+            const result = await deleteReport(report);
             btn.disabled = false;
             btn.innerHTML = 'Hapus';
             
