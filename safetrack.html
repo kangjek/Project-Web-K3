@@ -237,7 +237,24 @@
         }
 
         function persistLocalReports() {
-            localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(allReports));
+            try {
+                localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(allReports));
+            } catch (error) {
+                // Fallback ketika data terlalu besar (umumnya karena lampiran foto base64)
+                if (error?.name === 'QuotaExceededError') {
+                    const compactReports = allReports.map((report) => ({
+                        ...report,
+                        photo_data: report.photo_data ? '[image-too-large-for-local-storage]' : ''
+                    }));
+
+                    localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(compactReports));
+                    allReports = compactReports;
+                    showToast('Foto terlalu besar untuk penyimpanan lokal. Metadata foto tetap tersimpan.', 'error');
+                    return;
+                }
+
+                throw error;
+            }
         }
 
         function generateBackendId() {
@@ -762,12 +779,18 @@
 
         function compressImage(file) {
             return new Promise((resolve, reject) => {
+                const maxOriginalSizeMB = 15;
+                if (file.size > maxOriginalSizeMB * 1024 * 1024) {
+                    reject(new Error('Ukuran foto terlalu besar. Maksimal 15MB.'));
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const img = new Image();
                     img.onload = () => {
-                        const maxWidth = 1280;
-                        const maxHeight = 1280;
+                        const maxWidth = 960;
+                        const maxHeight = 960;
                         let { width, height } = img;
 
                         if (width > maxWidth || height > maxHeight) {
@@ -780,8 +803,24 @@
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                            reject(new Error('Gagal memproses gambar di perangkat ini.'));
+                            return;
+                        }
+
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.75));
+
+                        let quality = 0.7;
+                        let output = canvas.toDataURL('image/jpeg', quality);
+
+                        // Kurangi kualitas bertahap agar ukuran base64 tidak terlalu besar untuk memori/storage
+                        const maxBase64Length = 450000;
+                        while (output.length > maxBase64Length && quality > 0.4) {
+                            quality -= 0.1;
+                            output = canvas.toDataURL('image/jpeg', quality);
+                        }
+
+                        resolve(output);
                     };
                     img.onerror = reject;
                     img.src = event.target.result;
@@ -818,7 +857,7 @@
                 if (otherInput) otherInput.value = '';
             } catch (error) {
                 console.error('Gagal memproses foto:', error);
-                showToast('Gagal memproses foto. Silakan coba lagi.', 'error');
+                showToast(error?.message || 'Gagal memproses foto. Silakan coba lagi.', 'error');
             }
         }
 
