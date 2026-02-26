@@ -200,7 +200,7 @@
                 toast_submit_failed: 'Gagal mengirim pengajuan'
             },
             en: {
-                k3_subtitle: 'OHS Reporting System',
+                k3_subtitle: 'HSE Reporting System',
                 name_placeholder: 'Enter Your Name',
                 dept_placeholder: 'Select Department',
                 login_employee: 'Login',
@@ -211,9 +211,9 @@
                 menu_permit: 'Permit & JSA',
                 menu_reporting: 'Reporting',
                 menu_manage_reports: 'Manage Reports',
-                menu_inspeksi_apar: '🧯 APAR Inspection',
+                menu_inspeksi_apar: '🧯 Fire Extinguisher Inspection',
                 menu_inspeksi_hydrant: '🚒 Hydrant Inspection',
-                menu_inspeksi_p3k: '⛑️ P3K Box Inspection',
+                menu_inspeksi_p3k: '⛑️ First Aid Box Inspection',
                 menu_inspeksi_tools: '🔧 Work Equipment',
                 menu_permit_work: '📋 Work Permit',
                 menu_jsa: '⚠️ JSA',
@@ -886,22 +886,22 @@
             content.innerHTML = `
                 <div class="fade-in">
                     <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🧯 APAR Inspection' : '🧯 Inspeksi APAR'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Light Fire Extinguisher inspection form' : 'Form inspeksi Alat Pemadam Api Ringan'}</p>
+                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🧯 Fire Extinguisher Inspection' : '🧯 Inspeksi APAR'}</h1>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Fire Extinguisher inspection form' : 'Form inspeksi Alat Pemadam Api Ringan'}</p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <form id="apar-form" onsubmit="submitInspeksiAPAR(event)">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'APAR Location' : 'Lokasi APAR'}</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Fire Extinguisher Location' : 'Lokasi APAR'}</label>
                                     <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Building A Floor 2' : 'Contoh: Gedung A Lt. 2'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'APAR Number' : 'Nomor APAR'}</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Fire Extinguisher Number' : 'Nomor APAR'}</label>
                                     <input type="text" name="apar_number" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: APAR-001' : 'Contoh: APAR-001'}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'APAR Type' : 'Jenis APAR'}</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Fire Extinguisher Type' : 'Jenis APAR'}</label>
                                     <select name="apar_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                         <option value="">${t('option_select_type')}</option>
                                         <option value="Powder">Powder</option>
@@ -931,8 +931,8 @@
                                 <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                     <option value="">${t('option_select_condition')}</option>
                                     <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
-                                    <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                    <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
+                                    <option value="Perlu Perbaikan">${currentLanguage === 'en' ? 'Needs to be Repaired' : 'Perlu Perbaikan'}</option>
+                                    <option value="Tidak Layak Pakai">${currentLanguage === 'en' ? 'Unusable' : 'Tidak Layak Pakai'}</option>
                                 </select>
                             </div>
                             <div class="mb-6">
@@ -982,7 +982,7 @@
             btn.innerHTML = t('btn_submit_inspection');
 
             if (result.isOk) {
-                showToast(currentLanguage === 'en' ? 'APAR inspection report submitted successfully!' : 'Laporan inspeksi APAR berhasil dikirim!');
+                showToast(currentLanguage === 'en' ? 'Fire Extinguisher inspection report submitted successfully!' : 'Laporan inspeksi APAR berhasil dikirim!');
                 form.reset();
             } else {
                 showToast(t('toast_send_failed'), 'error');
@@ -1034,8 +1034,8 @@
                                 <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                     <option value="">${t('option_select_condition')}</option>
                                     <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
-                                    <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                    <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
+                                    <option value="Perlu Perbaikan">${currentLanguage === 'en' ? 'Needs to be Repaired' : 'Perlu Perbaikan'}</option>
+                                    <option value="Tidak Layak Pakai">${currentLanguage === 'en' ? 'Unusable' : 'Tidak Layak Pakai'}</option>
                                 </select>
                             </div>
                             <div class="mb-6">
@@ -1273,9 +1273,9 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
                                 <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                     <option value="">${t('option_select_condition')}</option>
-                                    <option value="Baik">${currentLanguage === 'en' ? 'Good - Usable' : 'Baik - Layak Pakai'}</option>
-                                    <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                    <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
+                                    <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
+                                    <option value="Perlu Perbaikan">${currentLanguage === 'en' ? 'Needs to be Repaired' : 'Perlu Perbaikan'}</option>
+                                    <option value="Tidak Layak Pakai">${currentLanguage === 'en' ? 'Unusable' : 'Tidak Layak Pakai'}</option>
                                 </select>
                             </div>
                             <div class="mb-6">
@@ -1349,9 +1349,9 @@
                                     <select name="work_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                         <option value="">${t('option_select_type')}</option>
                                         <option value="Pekerjaan Panas">Pekerjaan Panas (Hot Work)</option>
-                                        <option value="Bekerja di Ketinggian">Bekerja di Ketinggian</option>
+                                        <option value="Bekerja di Ketinggian">Bekerja di Ketinggian (Working at Height)</option>
                                         <option value="Ruang Terbatas">Ruang Terbatas (Confined Space)</option>
-                                        <option value="Pekerjaan Listrik">Pekerjaan Listrik</option>
+                                        <option value="Pekerjaan Listrik">Pekerjaan Listrik (Electrical Work)</option>
                                         <option value="Penggalian">Penggalian (Excavation)</option>
                                         <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
@@ -1552,13 +1552,13 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
                                     <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                         <option value="">${t('option_select_category')}</option>
-                                        <option value="Lantai Licin">Lantai Licin/Basah</option>
-                                        <option value="Instalasi Listrik">Instalasi Listrik Berbahaya</option>
-                                        <option value="Kebocoran">Kebocoran (Gas/Cairan)</option>
-                                        <option value="Peralatan Rusak">Peralatan Rusak</option>
-                                        <option value="Pencahayaan">Pencahayaan Kurang</option>
-                                        <option value="Tumpahan Bahan Kimia">Tumpahan Bahan Kimia</option>
-                                        <option value="Akses Darurat">Akses Darurat Terhalang</option>
+                                        <option value="Lantai Licin">${currentLanguage === 'en' ? 'Slippery/Wet Floor' : 'Lantai Licin/Basah'}</option>
+                                        <option value="Instalasi Listrik">${currentLanguage === 'en' ? 'Hazardous Electrical Installation' : 'Instalasi Listrik Berbahaya'}</option>
+                                        <option value="Kebocoran">${currentLanguage === 'en' ? 'Leakage (Gas/Liquid)' : 'Kebocoran (Gas/Cairan)'}</option>
+                                        <option value="Peralatan Rusak">${currentLanguage === 'en' ? 'Damaged Equipment' : 'Peralatan Rusak'}</option>
+                                        <option value="Pencahayaan">${currentLanguage === 'en' ? 'Insufficient Lighting' : 'Pencahayaan Kurang'}</option>
+                                        <option value="Tumpahan Bahan Kimia">${currentLanguage === 'en' ? 'Chemical Spill' : 'Tumpahan Bahan Kimia'}</option>
+                                        <option value="Akses Darurat">${currentLanguage === 'en' ? 'Emergency Access Blocked' : 'Akses Darurat Terhalang'}</option>
                                         <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
                                 </div>
@@ -1657,14 +1657,14 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'PPE Type' : 'Jenis APD'}</label>
                                     <select name="apd_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                         <option value="">${currentLanguage === 'en' ? 'Select PPE Type' : 'Pilih Jenis APD'}</option>
-                                        <option value="Helm Safety">Helm Safety</option>
-                                        <option value="Kacamata Safety">Kacamata Safety</option>
+                                        <option value="Helm Safety">${currentLanguage === 'en' ? 'Safety Helmet' : 'Helm Safety'}</option>
+                                        <option value="Kacamata Safety">${currentLanguage === 'en' ? 'Safety Googles' : 'Kacamata Safety'}</option>
                                         <option value="Masker">Masker</option>
                                         <option value="Earplug/Earmuff">Earplug/Earmuff</option>
-                                        <option value="Sarung Tangan">Sarung Tangan</option>
-                                        <option value="Sepatu Safety">Sepatu Safety</option>
-                                        <option value="Rompi Safety">Rompi Safety</option>
-                                        <option value="Body Harness">Body Harness</option>
+                                        <option value="Sarung Tangan">${currentLanguage === 'en' ? 'Hand Gloves' : 'Sarung Tangan'}</option>
+                                        <option value="Sepatu Safety">${currentLanguage === 'en' ? 'Safety Shoes' : 'Sepatu Safety'}</option>
+                                        <option value="Rompi Safety">${currentLanguage === 'en' ? 'Safety Vest' : 'Rompi Safety'}</option>
+                                        <option value="Full Body Harness">Full Body Harness</option>
                                         <option value="Respirator">Respirator</option>
                                         <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
                                     </select>
@@ -1674,7 +1674,7 @@
                                     <input type="number" name="quantity" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="1">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ukuran (jika ada)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Size (if present)' : 'Ukuran (jika ada)'}</label>
                                     <select name="size" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
                                         <option value="">${currentLanguage === 'en' ? 'Select Size' : 'Pilih Ukuran'}</option>
                                         <option value="S">S</option>
