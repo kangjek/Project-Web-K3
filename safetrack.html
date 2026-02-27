@@ -899,14 +899,14 @@
                 <div class="fade-in">
                     <div class="mb-6">
                         <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                        <p class="text-gray-500">Selamat datang, ${currentUser.name}! ${currentUser.role === 'admin' ? '(Administrator)' : ''}</p>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Welcome' : 'Selamat datang'}, ${currentUser.name}! ${currentUser.role === 'admin' ? '(Administrator)' : ''}</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-500 text-sm">Menunggu Konfirmasi</p>
+                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Waiting for Confirmation' : 'Menunggu Konfirmasi'}</p>
                                     <p class="text-3xl font-bold text-amber-500">${waiting}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
@@ -917,7 +917,7 @@
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-500 text-sm">Sedang Diproses</p>
+                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Processing' : 'Sedang Diproses'}</p>
                                     <p class="text-3xl font-bold text-blue-500">${processing}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -928,7 +928,7 @@
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-500 text-sm">Selesai</p>
+                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Completed' : 'Selesai'}</p>
                                     <p class="text-3xl font-bold text-emerald-500">${completed}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -939,7 +939,7 @@
                         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-500 text-sm">Perlu Perhatian</p>
+                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Needs Attention' : 'Perlu Perhatian'}</p>
                                     <p class="text-3xl font-bold text-red-500">${needsAttention}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
@@ -954,7 +954,7 @@
                         <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-6 shadow-sm text-white">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-emerald-100 text-sm">Total Laporan</p>
+                                    <p class="text-emerald-100 text-sm">${currentLanguage === 'en' ? 'Total Reports' : 'Total Laporan'}</p>
                                     <p class="text-3xl font-bold">${totalReports}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -965,9 +965,9 @@
                         <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl p-6 shadow-sm text-white">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-purple-100 text-sm">Tingkat Penyelesaian</p>
+                                    <p class="text-purple-100 text-sm">${currentLanguage === 'en' ? 'Completion Rate' : 'Tingkat Penyelesaian'}</p>
                                     <p class="text-3xl font-bold">${completionRate}%</p>
-                                    <p class="text-xs text-purple-100 mt-1">${completed} dari ${totalReports}</p>
+                                    <p class="text-xs text-purple-100 mt-1">${completed} ${currentLanguage === 'en' ? 'from' : 'dari'} ${totalReports}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -977,9 +977,9 @@
                         <div class="bg-gradient-to-br from-red-500 to-orange-600 rounded-xl p-6 shadow-sm text-white">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-red-100 text-sm">Prioritas Tinggi</p>
+                                    <p class="text-red-100 text-sm">${currentLanguage === 'en' ? 'High Priority' : 'Prioritas Tinggi'}</p>
                                     <p class="text-3xl font-bold">${highPriority}</p>
-                                    <p class="text-xs text-red-100 mt-1">memerlukan penanganan</p>
+                                    <p class="text-xs text-red-100 mt-1">${currentLanguage === 'en' ? 'need for treatment' : 'memerlukan penanganan'}</p>
                                 </div>
                                 <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -1012,7 +1012,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <!-- Laporan per Tipe -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4">📊 Laporan per Tipe</h3>
+                            <h3 class="font-semibold text-gray-800 mb-4">${currentLanguage === 'en' ? '📊 Report by Type' : '📊 Laporan per Tipe'}</h3>
                             <div class="space-y-3">
                                 ${Object.entries(typeStats).sort((a, b) => b[1] - a[1]).map(([type, count]) => `
                                     <div>
