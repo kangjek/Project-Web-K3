@@ -389,6 +389,84 @@
         function persistLocalReports() {
             localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(allReports));
         }
+   
+        function fetchReportsWithJsonp() {
+            return new Promise((resolve, reject) => {
+                const callbackName = `safeTrackJsonp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                const script = document.createElement('script');
+                const cleanup = () => {
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    delete window[callbackName];
+                };
+
+                window[callbackName] = (payload) => {
+                    cleanup();
+                    if (payload?.status === 'success' && Array.isArray(payload.reports)) {
+                        resolve(payload.reports.filter(r => r.__backendId));
+                    } else {
+                        reject(new Error('Format respons JSONP tidak valid'));
+                    }
+                };
+
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('JSONP request gagal dimuat'));
+                };
+
+                script.src = `${GOOGLE_SHEETS_API}?action=getReports&callback=${callbackName}&_=${Date.now()}`;
+                document.body.appendChild(script);
+            });
+        }
+
+        async function fetchReportsFromGoogleSheets() {
+            try {
+                const response = await fetch(`${GOOGLE_SHEETS_API}?action=getReports&_=${Date.now()}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const payload = await response.json();
+                if (payload.status !== 'success' || !Array.isArray(payload.reports)) {
+                    throw new Error('Format respons tidak valid');
+                }
+
+                return payload.reports.filter(r => r.__backendId);
+            } catch (error) {
+                console.warn('Fetch CORS gagal, coba fallback JSONP:', error);
+                try {
+                    return await fetchReportsWithJsonp();
+                } catch (jsonpError) {
+                    console.warn('Gagal mengambil data dari Google Sheets (JSONP fallback):', jsonpError);
+                    return [];
+                }
+            }
+        }
+
+        function mergeReports(remoteReports, localReports) {
+            const mergedMap = new Map();
+
+            remoteReports.forEach(report => {
+                mergedMap.set(report.__backendId, report);
+            });
+
+            localReports.forEach(report => {
+                if (!report.__backendId) return;
+                if (!mergedMap.has(report.__backendId)) {
+                    mergedMap.set(report.__backendId, report);
+                }
+            });
+
+            return Array.from(mergedMap.values()).sort((a, b) => {
+                const dateA = new Date(a.report_date || 0).getTime();
+                const dateB = new Date(b.report_date || 0).getTime();
+                return dateB - dateA;
+            });
+        }
 
         function generateBackendId() {
             return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -464,16 +542,24 @@
                 });
             }
 
-            // Initialize Data SDK
+            // Prioritaskan data dari Google Sheets agar sinkron antar perangkat
+            loadLocalReports();
+            const cloudReports = await fetchReportsFromGoogleSheets();
+            allReports = mergeReports(cloudReports, allReports);
+            persistLocalReports();
+
+            // Jika ada data lokal yang belum tersinkron, kirim ulang ke Google Sheets
+            if (allReports.length > cloudReports.length) {
+                syncToGoogleSheets(allReports);
+            }
+
+            // Initialize Data SDK (jika tersedia di environment Canva)
             if (window.dataSdk) {
                 const result = await window.dataSdk.init(dataHandler);
                 if (!result.isOk) {
                     console.error('Failed to initialize data SDK');
-                    loadLocalReports();
                 }
-              } else {
-                loadLocalReports();
-            }
+             }
         }
 
         // Role Selection
