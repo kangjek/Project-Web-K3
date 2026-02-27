@@ -109,6 +109,20 @@ function doPost(e) {
   }
 }
 
+
+function formatServerDateTime(value) {
+  if (!value) {
+    return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  }
+
+  const parsed = new Date(value);
+  if (isNaN(parsed.getTime())) {
+    return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  }
+
+  return Utilities.formatDate(parsed, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+}
+
 // Sinkronisasi semua laporan
 function syncAllReports(sheet, reports) {
   if (!reports || reports.length === 0) return;
@@ -136,7 +150,7 @@ function syncAllReports(sheet, reports) {
   if (newReports.length > 0) {
     const newRows = newReports.map(r => [
       r.backendId,
-      r.date,
+      formatServerDateTime(r.date),
       r.type,
       r.category,
       r.reporter,
@@ -160,7 +174,7 @@ function syncAllReports(sheet, reports) {
   updateIndices.forEach(({ report, rowIndex }) => {
     const values = [
       report.backendId,
-      report.date,
+      formatServerDateTime(report.date),
       report.type,
       report.category,
       report.reporter,

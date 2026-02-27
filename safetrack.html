@@ -447,6 +447,32 @@
             }
         }
 
+
+        function getDeviceDateTimeIso() {
+            const now = new Date();
+            if (Number.isNaN(now.getTime())) return '';
+
+            const pad = (n) => String(n).padStart(2, '0');
+            const year = now.getFullYear();
+            const month = pad(now.getMonth() + 1);
+            const day = pad(now.getDate());
+            const hour = pad(now.getHours());
+            const minute = pad(now.getMinutes());
+            const second = pad(now.getSeconds());
+
+            const offsetMinutes = -now.getTimezoneOffset();
+            const sign = offsetMinutes >= 0 ? '+' : '-';
+            const absOffset = Math.abs(offsetMinutes);
+            const offsetHour = pad(Math.floor(absOffset / 60));
+            const offsetMinute = pad(absOffset % 60);
+
+            return `${year}-${month}-${day}T${hour}:${minute}:${second}${sign}${offsetHour}:${offsetMinute}`;
+        }
+
+        function getReportDateTime() {
+            return getDeviceDateTimeIso() || new Date().toISOString();
+        }
+
         function mergeReports(remoteReports, localReports) {
             const mergedMap = new Map();
 
@@ -1174,7 +1200,7 @@
                 location: form.location.value,
                 department: currentUser.department,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: form.overall_condition.value === 'Baik' ? 'Selesai' : form.overall_condition.value,
                 details: `No: ${form.apar_number.value}, Exp: ${form.expiry_date.value}`,
                 description: form.notes.value || '-',
@@ -1277,7 +1303,7 @@
                 location: form.location.value,
                 department: currentUser.department,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: form.overall_condition.value === 'Baik' ? 'Selesai' : form.overall_condition.value,
                 details: `ID: ${form.hydrant_id.value}`,
                 description: form.notes.value || '-',
@@ -1408,7 +1434,7 @@
                 location: form.location.value,
                 department: currentUser.department,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: needsRefill ? 'Perlu Isi Ulang' : 'Selesai',
                 box_type: boxType,
                 items_status: itemsStatus.join('; ') || 'Semua item lengkap',
@@ -1517,7 +1543,7 @@
                 location: form.location.value,
                 department: form.department.value,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: form.overall_condition.value === 'Baik' ? 'Selesai' : form.overall_condition.value,
                 details: `Asset ID: ${form.asset_id.value || '-'}`,
                 description: form.notes.value || '-',
@@ -1627,7 +1653,7 @@
                 location: form.location.value,
                 department: form.department.value,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: 'Menunggu Konfirmasi',
                 details: `Tanggal: ${form.work_date.value}, ${form.start_time.value} - ${form.end_time.value}`,
                 description: form.work_description.value,
@@ -1721,7 +1747,7 @@
                 location: form.location.value,
                 department: form.department.value,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: 'Menunggu Konfirmasi',
                 details: `Bahaya: ${form.hazards.value.substring(0, 100)}...`,
                 description: `Langkah: ${form.job_steps.value} | Pencegahan: ${form.controls.value}`,
@@ -1826,7 +1852,7 @@
                 location: form.location.value,
                 department: form.department.value,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: 'Menunggu Konfirmasi',
                 details: `Tingkat: ${form.severity.value}`,
                 description: form.description.value,
@@ -1942,7 +1968,7 @@
                 location: '-',
                 department: form.department.value,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: 'Menunggu Konfirmasi',
                 details: `Jumlah: ${form.quantity.value}, Ukuran: ${form.size.value || '-'}, Alasan: ${form.reason.value}`,
                 description: form.notes.value || '-',
@@ -2036,7 +2062,7 @@
                 location: form.location.value || '-',
                 department: form.department.value,
                 reporter_name: currentUser.name,
-                report_date: new Date().toISOString().split('T')[0],
+                report_date: getReportDateTime(),
                 status: 'Menunggu Konfirmasi',
                 details: form.title.value,
                 description: form.suggestion.value,
