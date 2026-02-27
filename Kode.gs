@@ -85,6 +85,14 @@ function doPost(e) {
     const sheet = initializeSheet();
     const rawBody = e && e.postData && e.postData.contents ? e.postData.contents : '{}';
     const data = JSON.parse(rawBody);
+
+    if (data.action === 'deleteReport' && data.backendId) {
+      const deleted = deleteReportById(sheet, data.backendId);
+      return createApiOutput({
+        status: deleted ? 'success' : 'error',
+        message: deleted ? 'Laporan berhasil dihapus dari spreadsheet' : 'Laporan tidak ditemukan di spreadsheet'
+      });
+    }
     
     if (data.action === 'syncAll' && data.reports && Array.isArray(data.reports)) {
       // Sinkronisasi seluruh laporan
@@ -197,13 +205,26 @@ function removeDuplicates(sheet) {
     sheet.deleteRow(row);
   });
 }
+
+function deleteReportById(sheet, backendId) {
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = data.length - 1; i > 0; i--) {
+    if (data[i][0] === backendId) {
+      sheet.deleteRow(i + 1); // +1 karena Google Sheets 1-indexed
+      return true;
+    }
+  }
+
+  return false;
+}
 function doGet(e) {
   try {
     const sheet = initializeSheet();
     const action = e && e.parameter && e.parameter.action ? e.parameter.action : "summary";
     const callback = e && e.parameter && e.parameter.callback ? e.parameter.callback : "";
 
-  // action=getReports -> kirim semua data laporan agar bisa sinkron lintas device
+    // action=getReports -> kirim semua data laporan agar bisa sinkron lintas device
     if (action === "getReports") {
       const data = sheet.getDataRange().getValues();
       const reports = data.slice(1).map(row => ({
@@ -225,7 +246,7 @@ function doGet(e) {
         synced_at: row[15] || ""
       }));
 
-  return createApiOutput({ status: "success", reports, total: reports.length }, callback);
+      return createApiOutput({ status: "success", reports, total: reports.length }, callback);
     }
 
     // default: ringkasan total

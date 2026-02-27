@@ -468,6 +468,101 @@
             });
         }
 
+        function formatDateTime(value) {
+            if (!value) return '-';
+
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+
+            return date.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function fetchReportsWithJsonp() {
+            return new Promise((resolve, reject) => {
+                const callbackName = `safeTrackJsonp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                const script = document.createElement('script');
+                const cleanup = () => {
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    delete window[callbackName];
+                };
+
+                window[callbackName] = (payload) => {
+                    cleanup();
+                    if (payload?.status === 'success' && Array.isArray(payload.reports)) {
+                        resolve(payload.reports.filter(r => r.__backendId));
+                    } else {
+                        reject(new Error('Format respons JSONP tidak valid'));
+                    }
+                };
+
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('JSONP request gagal dimuat'));
+                };
+
+                script.src = `${GOOGLE_SHEETS_API}?action=getReports&callback=${callbackName}&_=${Date.now()}`;
+                document.body.appendChild(script);
+            });
+        }
+
+        async function fetchReportsFromGoogleSheets() {
+            try {
+                const response = await fetch(`${GOOGLE_SHEETS_API}?action=getReports&_=${Date.now()}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const payload = await response.json();
+                if (payload.status !== 'success' || !Array.isArray(payload.reports)) {
+                    throw new Error('Format respons tidak valid');
+                }
+
+                return payload.reports.filter(r => r.__backendId);
+            } catch (error) {
+                console.warn('Fetch CORS gagal, coba fallback JSONP:', error);
+                try {
+                    return await fetchReportsWithJsonp();
+                } catch (jsonpError) {
+                    console.warn('Gagal mengambil data dari Google Sheets (JSONP fallback):', jsonpError);
+                    return [];
+                }
+            }
+        }
+
+        function mergeReports(remoteReports, localReports) {
+            const mergedMap = new Map();
+
+            remoteReports.forEach(report => {
+                mergedMap.set(report.__backendId, report);
+            });
+
+            localReports.forEach(report => {
+                if (!report.__backendId) return;
+                if (!mergedMap.has(report.__backendId)) {
+                    mergedMap.set(report.__backendId, report);
+                }
+            });
+
+            return Array.from(mergedMap.values()).sort((a, b) => {
+                const dateA = new Date(a.report_date || 0).getTime();
+                const dateB = new Date(b.report_date || 0).getTime();
+                return dateB - dateA;
+            });
+        }
+
         function generateBackendId() {
             return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         }
@@ -495,8 +590,33 @@
             return { isOk: true, value: report };
         }
 
+        async function deleteReportFromGoogleSheets(backendId) {
+            try {
+                const response = await fetch(GOOGLE_SHEETS_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'deleteReport', backendId })
+                });
+
+                const payload = await response.json();
+                if (payload.status !== 'success') {
+                    throw new Error(payload.message || 'Gagal menghapus data di spreadsheet');
+                }
+
+                return { isOk: true };
+            } catch (error) {
+                console.error('Delete from Google Sheets failed:', error);
+                return { isOk: false, error };
+            }
+        }
+
         async function deleteReport(report) {
             if (window.dataSdk?.delete) return await window.dataSdk.delete(report);
+
+            const cloudDelete = await deleteReportFromGoogleSheets(report.__backendId);
+            if (!cloudDelete.isOk) {
+                return { isOk: false };
+            }
 
             allReports = allReports.filter(r => r.__backendId !== report.__backendId);
             persistLocalReports();
@@ -559,7 +679,7 @@
                 if (!result.isOk) {
                     console.error('Failed to initialize data SDK');
                 }
-             }
+            }
         }
 
         // Role Selection
@@ -722,16 +842,16 @@
 
         // Dashboard
         function renderDashboard() {
-            const userReports = currentUser.role === 'admin' ? allReports : allReports.filter(r => r.reporter_name === currentUser.name);
+            const visibleReports = allReports;
             
-            const waiting = userReports.filter(r => r.status === 'Menunggu Konfirmasi').length;
-            const processing = userReports.filter(r => r.status === 'Diproses').length;
-            const completed = userReports.filter(r => r.status === 'Selesai').length;
-            const needsAttention = userReports.filter(r => r.status === 'Perlu Perbaikan' || r.status === 'Perlu Isi Ulang' || r.status === 'Tidak Layak Pakai').length;
+            const waiting = visibleReports.filter(r => r.status === 'Menunggu Konfirmasi').length;
+            const processing = visibleReports.filter(r => r.status === 'Diproses').length;
+            const completed = visibleReports.filter(r => r.status === 'Selesai').length;
+            const needsAttention = visibleReports.filter(r => r.status === 'Perlu Perbaikan' || r.status === 'Perlu Isi Ulang' || r.status === 'Tidak Layak Pakai').length;
             
             // Statistik tambahan
-            const highPriority = userReports.filter(r => r.priority === 'Tinggi').length;
-            const totalReports = userReports.length;
+            const highPriority = visibleReports.filter(r => r.priority === 'Tinggi').length;
+            const totalReports = visibleReports.length;
             const completionRate = totalReports > 0 ? Math.round((completed / totalReports) * 100) : 0;
             
             // Hitung laporan per departemen (admin only)
@@ -744,7 +864,7 @@
             
             // Hitung laporan per tipe
             const typeStats = {};
-            userReports.forEach(r => {
+            visibleReports.forEach(r => {
                 typeStats[r.type] = (typeStats[r.type] || 0) + 1;
             });
 
@@ -849,11 +969,11 @@
                             Item yang Membutuhkan Perhatian
                         </h3>
                         <div class="space-y-2">
-                            ${userReports.filter(r => r.status === 'Perlu Perbaikan' || r.status === 'Perlu Isi Ulang' || r.status === 'Tidak Layak Pakai').slice(0, 5).map(r => `
+                            ${visibleReports.filter(r => r.status === 'Perlu Perbaikan' || r.status === 'Perlu Isi Ulang' || r.status === 'Tidak Layak Pakai').slice(0, 5).map(r => `
                                 <div class="bg-white rounded-lg p-3 flex items-center justify-between">
                                     <div>
                                         <p class="font-medium text-gray-800">${r.category || r.type}</p>
-                                        <p class="text-sm text-gray-500">${r.location || r.department} - ${r.report_date}</p>
+                                        <p class="text-sm text-gray-500">${r.location || r.department} - ${formatDateTime(r.report_date)}</p>
                                     </div>
                                     <span class="status-badge status-needs-attention">${r.status}</span>
                                 </div>
@@ -909,24 +1029,24 @@
                             <h3 class="font-semibold text-gray-800">Laporan Terbaru</h3>
                         </div>
                         <div class="divide-y divide-gray-100">
-                            ${userReports.length === 0 ? `
+                            ${visibleReports.length === 0 ? `
                                 <div class="p-8 text-center text-gray-500">
                                     <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                     <p>Belum ada laporan</p>
                                 </div>
-                            ` : userReports.slice(0, 10).map(r => `
-                                <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            ` : visibleReports.slice(0, 10).map(r => `
+                                <button type="button" onclick="viewReport('${r.__backendId}')" class="w-full text-left p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                                     <div class="flex items-center gap-4">
                                         <div class="w-10 h-10 rounded-full ${getTypeColor(r.type)} flex items-center justify-center text-white font-bold">
                                             ${getTypeIcon(r.type)}
                                         </div>
                                         <div>
                                             <p class="font-medium text-gray-800">${r.type} - ${r.category || ''}</p>
-                                            <p class="text-sm text-gray-500">${r.location || r.department} • ${r.report_date}</p>
+                                            <p class="text-sm text-gray-500">${r.location || r.department} • ${formatDateTime(r.report_date)}</p>
                                         </div>
                                     </div>
                                     <span class="status-badge ${getStatusClass(r.status)}">${r.status}</span>
-                                </div>
+                                </button>
                             `).join('')}
                         </div>
                     </div>
@@ -2025,7 +2145,7 @@
             emptyState?.classList.add('hidden');
             tbody.innerHTML = filtered.map(r => `
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 text-sm text-gray-700">${r.report_date}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700">${formatDateTime(r.report_date)}</td>
                     <td class="px-4 py-3 text-sm text-gray-700">${r.type}</td>
                     <td class="px-4 py-3 text-sm text-gray-700">${r.category || '-'}</td>
                     <td class="px-4 py-3 text-sm text-gray-700">${r.reporter_name}</td>
@@ -2065,7 +2185,7 @@
                                 <div><p class="text-xs text-gray-500">Pelapor</p><p class="font-medium">${report.reporter_name}</p></div>
                                 <div><p class="text-xs text-gray-500">Departemen</p><p class="font-medium">${report.department}</p></div>
                                 <div><p class="text-xs text-gray-500">Lokasi</p><p class="font-medium">${report.location || '-'}</p></div>
-                                <div><p class="text-xs text-gray-500">Tanggal</p><p class="font-medium">${report.report_date}</p></div>
+                                <div><p class="text-xs text-gray-500">Tanggal</p><p class="font-medium">${formatDateTime(report.report_date)}</p></div>
                                 <div><p class="text-xs text-gray-500">Prioritas</p><p class="font-medium">${report.priority || 'Normal'}</p></div>
                                 <div><p class="text-xs text-gray-500">Status</p><span class="status-badge ${getStatusClass(report.status)}">${report.status}</span></div>
                             </div>
