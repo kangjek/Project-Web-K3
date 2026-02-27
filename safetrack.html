@@ -330,7 +330,7 @@
         const departments = ['Lab/QC', 'Dyeing', 'Winding', 'Warehouse', 'HSE', 'GA', 'Utility & Maintenance', 'Office'];
 
         // Google Sheets Sync Config - UPDATE THIS WITH YOUR DEPLOYMENT URL
-        const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycby8yHZwLJHWzndK82pHAktyT3Dj2-ZPOH3Fj-F4cdDNyJ933_Wpwu0CIyhzErVHNpZR/exec';
+        const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbzTG9Hs62r2eDumzLAFvgLDwdUHBLQV-5tC12XajU0u_dY2Y8PPq-US2GXiycsEzav7/exec';
 
         // Sync reports to Google Sheets
         async function syncToGoogleSheets(reports) {
@@ -388,6 +388,84 @@
 
         function persistLocalReports() {
             localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(allReports));
+        }
+   
+        function fetchReportsWithJsonp() {
+            return new Promise((resolve, reject) => {
+                const callbackName = `safeTrackJsonp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+                const script = document.createElement('script');
+                const cleanup = () => {
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    delete window[callbackName];
+                };
+
+                window[callbackName] = (payload) => {
+                    cleanup();
+                    if (payload?.status === 'success' && Array.isArray(payload.reports)) {
+                        resolve(payload.reports.filter(r => r.__backendId));
+                    } else {
+                        reject(new Error('Format respons JSONP tidak valid'));
+                    }
+                };
+
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('JSONP request gagal dimuat'));
+                };
+
+                script.src = `${GOOGLE_SHEETS_API}?action=getReports&callback=${callbackName}&_=${Date.now()}`;
+                document.body.appendChild(script);
+            });
+        }
+
+        async function fetchReportsFromGoogleSheets() {
+            try {
+                const response = await fetch(`${GOOGLE_SHEETS_API}?action=getReports&_=${Date.now()}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const payload = await response.json();
+                if (payload.status !== 'success' || !Array.isArray(payload.reports)) {
+                    throw new Error('Format respons tidak valid');
+                }
+
+                return payload.reports.filter(r => r.__backendId);
+            } catch (error) {
+                console.warn('Fetch CORS gagal, coba fallback JSONP:', error);
+                try {
+                    return await fetchReportsWithJsonp();
+                } catch (jsonpError) {
+                    console.warn('Gagal mengambil data dari Google Sheets (JSONP fallback):', jsonpError);
+                    return [];
+                }
+            }
+        }
+
+        function mergeReports(remoteReports, localReports) {
+            const mergedMap = new Map();
+
+            remoteReports.forEach(report => {
+                mergedMap.set(report.__backendId, report);
+            });
+
+            localReports.forEach(report => {
+                if (!report.__backendId) return;
+                if (!mergedMap.has(report.__backendId)) {
+                    mergedMap.set(report.__backendId, report);
+                }
+            });
+
+            return Array.from(mergedMap.values()).sort((a, b) => {
+                const dateA = new Date(a.report_date || 0).getTime();
+                const dateB = new Date(b.report_date || 0).getTime();
+                return dateB - dateA;
+            });
         }
 
         function formatDateTime(value) {
