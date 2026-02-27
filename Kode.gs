@@ -2,10 +2,19 @@
 
 const SHEET_NAME = 'SafeTrack Reports';
 const HEADER_ROW = 1;
+const SPREADSHEET_ID = '1sq5leW45LVQjUzmojpadHKpu1RYFXymAg7LEuRpJDFM';
+
+function getSpreadsheet() {
+  // Prioritaskan Spreadsheet ID agar web app konsisten lintas deployment
+  if (SPREADSHEET_ID) {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
 
 // Inisialisasi sheet jika belum ada
 function initializeSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
   
   if (!sheet) {
@@ -58,30 +67,37 @@ function initializeSheet() {
   return sheet;
 }
 
+function createApiOutput(payload, callback) {
+  if (callback) {
+    return ContentService
+      .createTextOutput(`${callback}(${JSON.stringify(payload)})`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 // Main handler untuk POST request dari Canva
 function doPost(e) {
   try {
     const sheet = initializeSheet();
-    const data = JSON.parse(e.postData.contents);
+    const rawBody = e && e.postData && e.postData.contents ? e.postData.contents : '{}';
+    const data = JSON.parse(rawBody);
     
     if (data.action === 'syncAll' && data.reports && Array.isArray(data.reports)) {
       // Sinkronisasi seluruh laporan
       syncAllReports(sheet, data.reports);
       
-      return ContentService.createTextOutput(
-        JSON.stringify({ status: 'success', message: `${data.reports.length} laporan tersinkronisasi` })
-      ).setMimeType(ContentService.MimeType.JSON);
+      return createApiOutput({ status: 'success', message: `${data.reports.length} laporan tersinkronisasi` });
     }
     
-    return ContentService.createTextOutput(
-      JSON.stringify({ status: 'error', message: 'Action tidak dikenali' })
-    ).setMimeType(ContentService.MimeType.JSON);
+    return createApiOutput({ status: 'error', message: 'Action tidak dikenali' });
     
   } catch (error) {
     Logger.log('Error di doPost: ' + error.toString());
-    return ContentService.createTextOutput(
-      JSON.stringify({ status: 'error', message: error.toString() })
-    ).setMimeType(ContentService.MimeType.JSON);
+    return createApiOutput({ status: 'error', message: error.toString() });
   }
 }
 
@@ -181,16 +197,45 @@ function removeDuplicates(sheet) {
     sheet.deleteRow(row);
   });
 }
-function doGet() {
-  const sheet = SpreadsheetApp
-    .openById("1sq5leW45LVQjUzmojpadHKpu1RYFXymAg7LEuRpJDFM")
-    .getSheetByName("SafeTrack Reports");
+function doGet(e) {
+  try {
+    const sheet = initializeSheet();
+    const action = e && e.parameter && e.parameter.action ? e.parameter.action : "summary";
+    const callback = e && e.parameter && e.parameter.callback ? e.parameter.callback : "";
 
-  const total = sheet.getLastRow() - 1;
+  // action=getReports -> kirim semua data laporan agar bisa sinkron lintas device
+    if (action === "getReports") {
+      const data = sheet.getDataRange().getValues();
+      const reports = data.slice(1).map(row => ({
+        __backendId: row[0] || "",
+        report_date: row[1] || "",
+        type: row[2] || "",
+        category: row[3] || "",
+        reporter_name: row[4] || "",
+        department: row[5] || "",
+        location: row[6] || "",
+        status: row[7] || "",
+        priority: row[8] || "Normal",
+        details: row[9] || "",
+        description: row[10] || "",
+        box_type: row[11] || "",
+        items_status: row[12] || "",
+        admin_notes: row[13] || "",
+        completed_date: row[14] || "",
+        synced_at: row[15] || ""
+      }));
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ total }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return createApiOutput({ status: "success", reports, total: reports.length }, callback);
+    }
+
+    // default: ringkasan total
+    const total = Math.max(sheet.getLastRow() - HEADER_ROW, 0);
+    return createApiOutput({ status: "success", total }, callback);
+  } catch (error) {
+    Logger.log("Error di doGet: " + error.toString());
+    const callback = e && e.parameter && e.parameter.callback ? e.parameter.callback : "";
+    return createApiOutput({ status: "error", message: error.toString() }, callback);
+  }
 }
 // Fungsi untuk test (jalankan dari Editor)
 function testSync() {
