@@ -8,7 +8,7 @@ const SPREADSHEET_ID = '1sq5leW45LVQjUzmojpadHKpu1RYFXymAg7LEuRpJDFM';
 // Buat folder baru di Drive, lalu ambil ID-nya dari URL
 // Contoh URL folder: https://drive.google.com/drive/folders/1ABC123xyz
 // ID-nya adalah bagian setelah /folders/
-const DRIVE_FOLDER_ID = 'ISI_DENGAN_ID_FOLDER_GOOGLE_DRIVE_ANDA';
+const DRIVE_FOLDER_ID = '1Chtj6DYWgPmhtDJJdS0j6NGnGzWuURhB';
 
 function getSpreadsheet() {
   if (SPREADSHEET_ID) {
@@ -19,7 +19,7 @@ function getSpreadsheet() {
 
 function getDriveFolder() {
   try {
-    if (DRIVE_FOLDER_ID && DRIVE_FOLDER_ID !== 'ISI_DENGAN_ID_FOLDER_GOOGLE_DRIVE_ANDA') {
+    if (DRIVE_FOLDER_ID && DRIVE_FOLDER_ID !== '1Chtj6DYWgPmhtDJJdS0j6NGnGzWuURhB') {
       return DriveApp.getFolderById(DRIVE_FOLDER_ID);
     }
     // Fallback: cari atau buat folder bernama 'SafeTrack Photos'
