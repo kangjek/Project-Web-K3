@@ -1,0 +1,1981 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeTrack - K3 Reporting System</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .sidebar-item { transition: all 0.2s ease; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-item.active { background: rgba(255,255,255,0.15); border-left: 3px solid #10b981; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-waiting { background: #fef3c7; color: #92400e; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-needs-attention { background: #fee2e2; color: #991b1b; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .submenu.open { max-height: 500px; }
+        input:focus, select:focus, textarea:focus { outline: none; ring: 2px; ring-color: #10b981; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Upload foto styles */
+        .photo-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+        .photo-upload-area:hover, .photo-upload-area.dragover {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .photo-upload-area input[type="file"] {
+            display: none;
+        }
+        .photo-thumb {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+        .photo-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .photo-thumb .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 20px;
+            height: 20px;
+            background: rgba(239,68,68,0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            line-height: 1;
+        }
+        .photo-thumb .upload-progress {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .photo-thumb .upload-done {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-gray-50">
+  <div id="app" class="h-full flex flex-col">
+   <!-- Role Selection Screen -->
+   <div id="role-selection" class="h-full flex items-center justify-center bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 fade-in">
+      <div class="flex justify-end mb-4">
+      <select id="language-select-login" onchange="setLanguage(this.value)" class="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+       <option value="id">🇮🇩 Bahasa Indonesia</option>
+       <option value="en">🇬🇧 English</option>
+      </select>
+     </div>
+     <div class="text-center mb-8"><img src="https://iili.io/qKh4dGa.md.jpg" alt="Company Logo" class="h-20 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
+      <h1 id="app-title-login" class="text-3xl font-bold text-gray-800">SafeTrack</h1>
+      <p id="company-name-login" class="text-gray-500 mt-2">PT. Chin Hsin Thread Indonesia</p>
+      <p id="login-subtitle" class="text-sm text-gray-400 mt-1">Sistem Pelaporan K3</p>
+     </div>
+     <div class="space-y-3"><input type="text" id="user-name-input" placeholder="Masukkan Nama Anda" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"> <select id="user-dept-input" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"> <option id="dept-placeholder" value="">Pilih Departemen</option> <option value="Lab/QC">Lab/QC</option> <option value="Dyeing">Dyeing</option> <option value="Winding">Winding</option> <option value="Warehouse">Warehouse</option> <option value="HSE">HSE</option> <option value="GA">GA</option> <option value="Utility &amp; Maintenance">Utility &amp; Maintenance</option> <option value="Office">Office</option> </select>
+     </div>  
+     <div class="mt-6 space-y-3"><button onclick="selectRole('employee')" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-3">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg> <span id="employee-role-label">Masuk</span> </button> <button onclick="selectRole('admin')" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all flex items-center justify-center gap-3">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+       </svg> <span id="admin-role-label">Masuk sebagai Admin</span> </button>
+     </div>
+    </div>
+   </div>
+   <!-- Main Application -->
+   <div id="main-app" class="h-full flex hidden">
+    <button id="mobile-menu-btn" class="md:hidden fixed top-4 left-4 z-40 p-2 bg-gray-800 text-white rounded-lg">
+     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+     </svg></button>
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/50 md:hidden z-30" onclick="closeSidebar()"></div>
+    <aside id="sidebar" class="fixed md:static w-64 h-full md:h-auto bg-gradient-to-b from-gray-800 to-gray-900 text-white flex flex-col flex-shrink-0 -translate-x-full md:translate-x-0 transition-transform z-40 md:z-auto">
+     <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+      <div class="flex items-center gap-3"><img src="https://iili.io/qKh4dGa.md.jpg" alt="Logo" class="h-10 w-10 object-contain rounded" onerror="this.style.background='#10b981'">
+       <div>
+        <h2 id="sidebar-title" class="font-bold text-lg">SafeTrack</h2>
+        <p id="sidebar-subtitle" class="text-xs text-gray-400">Sistem Pelaporan K3</p>
+       </div>
+      </div><button id="mobile-close-btn" class="md:hidden p-1 hover:bg-gray-700 rounded" onclick="closeSidebar()">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+       </svg></button>
+     </div>
+     <nav class="flex-1 py-4 overflow-y-auto">
+      <div class="px-3 mb-2"><button onclick="navigateTo('dashboard')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3" data-page="dashboard">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+        </svg> <span id="menu-dashboard">Dashboard</span> </button>
+      </div>
+      <div class="px-3 mb-2"><button onclick="toggleSubmenu('inspeksi')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+         </svg> <span id="menu-inspection">Inspeksi</span>
+        </div>
+        <svg class="w-4 h-4 transition-transform" id="inspeksi-arrow" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg></button>
+       <div id="inspeksi-submenu" class="submenu pl-4 mt-1 space-y-1"><button onclick="navigateTo('inspeksi-apar')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="inspeksi-apar"><span id="menu-inspeksi-apar">🧯 APAR</span></button> <button onclick="navigateTo('inspeksi-hydrant')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="inspeksi-hydrant"><span id="menu-inspeksi-hydrant">🚒 Hydrant</span></button> <button onclick="navigateTo('inspeksi-p3k')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="inspeksi-p3k"><span id="menu-inspeksi-p3k">🩹 P3K</span></button> <button onclick="navigateTo('inspeksi-peralatan')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="inspeksi-peralatan"><span id="menu-inspeksi-tools">🔧 Peralatan Kerja</span></button>
+       </div>
+      </div>
+      <div class="px-3 mb-2"><button onclick="toggleSubmenu('permit')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+         </svg> <span id="menu-permit">Permit &amp; JSA</span>
+        </div>
+        <svg class="w-4 h-4 transition-transform" id="permit-arrow" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg></button>
+       <div id="permit-submenu" class="submenu pl-4 mt-1 space-y-1"><button onclick="navigateTo('permit-kerja')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="permit-kerja"><span id="menu-permit-work">📋 Permit Kerja</span></button> <button onclick="navigateTo('jsa')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="jsa"><span id="menu-jsa">⚠️ JSA</span></button>
+       </div>
+      </div>
+      <div class="px-3 mb-2"><button onclick="toggleSubmenu('pelaporan')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+         </svg> <span id="menu-reporting">Pelaporan</span>
+        </div>
+        <svg class="w-4 h-4 transition-transform" id="pelaporan-arrow" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg></button>
+       <div id="pelaporan-submenu" class="submenu pl-4 mt-1 space-y-1"><button onclick="navigateTo('kondisi-tidak-aman')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="kondisi-tidak-aman"><span id="menu-unsafe">🚨 Kondisi Tidak Aman</span></button> <button onclick="navigateTo('request-apd')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="request-apd"><span id="menu-apd">🦺 Request APD</span></button> <button onclick="navigateTo('saran-lainnya')" class="sidebar-item w-full text-left px-4 py-2 rounded-lg text-sm text-gray-300 hover:text-white" data-page="saran-lainnya"><span id="menu-suggestions">💬 Saran Lainnya</span></button>
+       </div>
+      </div>
+      <div id="admin-menu" class="px-3 mb-2 hidden"><button onclick="navigateTo('manage-reports')" class="sidebar-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 bg-blue-600/20" data-page="manage-reports">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg> <span id="menu-manage-reports">Kelola Laporan</span> </button>
+      </div>
+     </nav>
+     <div class="p-4 border-t border-gray-700">
+      <select id="language-select-sidebar" onchange="setLanguage(this.value)" class="w-full mb-3 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm">
+       <option value="id">🇮🇩 Bahasa Indonesia</option>
+       <option value="en">🇬🇧 English</option>
+      </select>
+      <div class="flex items-center gap-3 mb-3">
+       <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-bold" id="user-avatar">U</div>
+       <div class="flex-1 min-w-0">
+        <p class="font-medium truncate" id="user-display-name">User</p>
+        <p class="text-xs text-gray-400" id="user-role-display">Departemen</p>
+       </div>
+      </div><button onclick="logout()" class="w-full py-2 px-4 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-all"> <span id="logout-label">Keluar</span> </button>
+     </div>
+    </aside>
+    <main class="flex-1 overflow-y-auto">
+     <div id="content-area" class="p-6"></div>
+    </main>
+   </div>
+   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+   <div id="modal-container" class="fixed inset-0 z-50 hidden"></div>
+  </div>
+
+  <script>
+    // ============================================================
+    // APP STATE
+    // ============================================================
+    let currentUser = { name: '', department: '', role: 'employee' };
+    let allReports = [];
+    let currentPage = 'dashboard';
+    let currentLanguage = 'id';
+
+    // State untuk foto yang sedang di-upload per form
+    // key: formId, value: array of { file, previewUrl, driveUrl, status: 'pending'|'uploading'|'done'|'error' }
+    const photoStates = {};
+
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const defaultConfig = {
+        company_name: 'PT. Chin Hsin Thread Indonesia',
+        app_title: 'SafeTrack',
+        admin_password: 'admin123'
+    };
+
+    const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbzTG9Hs62r2eDumzLAFvgLDwdUHBLQV-5tC12XajU0u_dY2Y8PPq-US2GXiycsEzav7/exec';
+    const LOCAL_REPORTS_KEY = 'safetrack_reports';
+    const MAX_PHOTO_SIZE_MB = 5;
+    const MAX_PHOTOS_PER_REPORT = 5;
+
+    // ============================================================
+    // TRANSLATIONS
+    // ============================================================
+    const translations = {
+        id: {
+            k3_subtitle: 'Sistem Pelaporan K3',
+            name_placeholder: 'Masukkan Nama Anda',
+            dept_placeholder: 'Pilih Departemen',
+            login_employee: 'Masuk',
+            login_admin: 'Masuk sebagai Admin',
+            sidebar_subtitle: 'Sistem Pelaporan K3',
+            menu_dashboard: 'Dashboard',
+            menu_inspection: 'Inspeksi',
+            menu_permit: 'Permit & JSA',
+            menu_reporting: 'Pelaporan',
+            menu_manage_reports: 'Kelola Laporan',
+            menu_inspeksi_apar: '🧯 Inspeksi APAR',
+            menu_inspeksi_hydrant: '🚒 Inspeksi Hydrant',
+            menu_inspeksi_p3k: '⛑️ Inspeksi Kotak P3K',
+            menu_inspeksi_tools: '🔧 Peralatan Kerja',
+            menu_permit_work: '📋 Permit Kerja',
+            menu_jsa: '⚠️ JSA',
+            menu_unsafe: '🚨 Kondisi Tidak Aman',
+            menu_apd: '🦺 Request APD',
+            menu_suggestions: '💬 Saran Lainnya',
+            role_employee: 'Karyawan',
+            role_admin: 'Admin',
+            logout: 'Keluar',
+            toast_name_required: 'Silakan masukkan nama Anda',
+            toast_department_required: 'Silakan pilih departemen',
+            toast_report_limit: 'Batas maksimum 999 laporan tercapai',
+            btn_submit_inspection: 'Kirim Laporan Inspeksi',
+            btn_submit_report: 'Kirim Laporan',
+            btn_submit_permit: 'Ajukan Permit Kerja',
+            btn_submit_jsa: 'Ajukan JSA',
+            btn_submit_apd: 'Kirim Permintaan APD',
+            btn_submit_suggestion: 'Kirim Saran',
+            option_select_department: 'Pilih Departemen',
+            option_select_category: 'Pilih Kategori',
+            option_select_type: 'Pilih Jenis',
+            option_select_condition: 'Pilih Kondisi',
+            option_select_level: 'Pilih Tingkat',
+            option_select_box_type: 'Pilih Tipe Kotak',
+            toast_send_failed: 'Gagal mengirim laporan',
+            toast_submit_failed: 'Gagal mengirim pengajuan',
+            photo_upload_label: 'Foto Dokumentasi',
+            photo_upload_hint: 'Klik atau seret foto ke sini (maks. 5 foto, 5MB/foto)',
+            photo_uploading: 'Mengunggah foto...',
+            photo_upload_done: 'Foto berhasil diunggah',
+            photo_upload_error: 'Gagal mengunggah foto',
+            photo_too_large: 'Ukuran foto terlalu besar (maks. 5MB)',
+            photo_max_reached: 'Maksimal 5 foto per laporan',
+        },
+        en: {
+            k3_subtitle: 'HSE Reporting System',
+            name_placeholder: 'Enter Your Name',
+            dept_placeholder: 'Select Department',
+            login_employee: 'Login',
+            login_admin: 'Login as Admin',
+            sidebar_subtitle: 'HSE Reporting System',
+            menu_dashboard: 'Dashboard',
+            menu_inspection: 'Inspection',
+            menu_permit: 'Permit & JSA',
+            menu_reporting: 'Reporting',
+            menu_manage_reports: 'Manage Reports',
+            menu_inspeksi_apar: '🧯 Fire Extinguisher Inspection',
+            menu_inspeksi_hydrant: '🚒 Hydrant Inspection',
+            menu_inspeksi_p3k: '⛑️ First Aid Box Inspection',
+            menu_inspeksi_tools: '🔧 Work Equipment',
+            menu_permit_work: '📋 Work Permit',
+            menu_jsa: '⚠️ JSA',
+            menu_unsafe: '🚨 Unsafe Condition',
+            menu_apd: '🦺 PPE Request',
+            menu_suggestions: '💬 Suggestions',
+            role_employee: 'Employee',
+            role_admin: 'Admin',
+            logout: 'Logout',
+            toast_name_required: 'Please enter your name',
+            toast_department_required: 'Please select a department',
+            toast_report_limit: 'Maximum 999 reports reached',
+            btn_submit_inspection: 'Submit Inspection Report',
+            btn_submit_report: 'Submit Report',
+            btn_submit_permit: 'Submit Work Permit',
+            btn_submit_jsa: 'Submit JSA',
+            btn_submit_apd: 'Submit PPE Request',
+            btn_submit_suggestion: 'Submit Suggestion',
+            option_select_department: 'Select Department',
+            option_select_category: 'Select Category',
+            option_select_type: 'Select Type',
+            option_select_condition: 'Select Condition',
+            option_select_level: 'Select Level',
+            option_select_box_type: 'Select Box Type',
+            toast_send_failed: 'Failed to submit report',
+            toast_submit_failed: 'Failed to submit request',
+            photo_upload_label: 'Documentation Photos',
+            photo_upload_hint: 'Click or drag photos here (max. 5 photos, 5MB/photo)',
+            photo_uploading: 'Uploading photo...',
+            photo_upload_done: 'Photo uploaded successfully',
+            photo_upload_error: 'Failed to upload photo',
+            photo_too_large: 'Photo is too large (max. 5MB)',
+            photo_max_reached: 'Maximum 5 photos per report',
+        }
+    };
+
+    function t(key) {
+        return translations[currentLanguage]?.[key] || translations.id[key] || key;
+    }
+
+    function setLanguage(lang) {
+        currentLanguage = translations[lang] ? lang : 'id';
+        applyLanguage();
+        document.documentElement.lang = currentLanguage === 'en' ? 'en' : 'id';
+        const loginSelector = document.getElementById('language-select-login');
+        const sidebarSelector = document.getElementById('language-select-sidebar');
+        if (loginSelector) loginSelector.value = currentLanguage;
+        if (sidebarSelector) sidebarSelector.value = currentLanguage;
+        if (currentUser?.name) {
+            document.getElementById('user-role-display').textContent = currentUser.role === 'admin' ? t('role_admin') : t('role_employee');
+        }
+    }
+
+    function applyLanguage() {
+        const textMap = {
+            'login-subtitle': 'k3_subtitle',
+            'employee-role-label': 'login_employee',
+            'admin-role-label': 'login_admin',
+            'sidebar-subtitle': 'sidebar_subtitle',
+            'menu-dashboard': 'menu_dashboard',
+            'menu-inspection': 'menu_inspection',
+            'menu-permit': 'menu_permit',
+            'menu-reporting': 'menu_reporting',
+            'menu-manage-reports': 'menu_manage_reports',
+            'menu-inspeksi-apar': 'menu_inspeksi_apar',
+            'menu-inspeksi-hydrant': 'menu_inspeksi_hydrant',
+            'menu-inspeksi-p3k': 'menu_inspeksi_p3k',
+            'menu-inspeksi-tools': 'menu_inspeksi_tools',
+            'menu-permit-work': 'menu_permit_work',
+            'menu-jsa': 'menu_jsa',
+            'menu-unsafe': 'menu_unsafe',
+            'menu-apd': 'menu_apd',
+            'menu-suggestions': 'menu_suggestions',
+            'logout-label': 'logout'
+        };
+        Object.entries(textMap).forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = t(key);
+        });
+        const nameInput = document.getElementById('user-name-input');
+        if (nameInput) nameInput.placeholder = t('name_placeholder');
+        const deptOption = document.getElementById('dept-placeholder');
+        if (deptOption) deptOption.textContent = t('dept_placeholder');
+    }
+
+    // ============================================================
+    // P3K ITEMS
+    // ============================================================
+    const p3kItems = [
+        { name: 'Kasa steril terbungkus', A: 20, B: 40, C: 40 },
+        { name: 'Perban (lebar 5 cm)', A: 2, B: 4, C: 6 },
+        { name: 'Perban (lebar 10 cm)', A: 2, B: 4, C: 6 },
+        { name: 'Plester (lebar 1,25 cm)', A: 2, B: 4, C: 6 },
+        { name: 'Plester cepat', A: 10, B: 15, C: 20 },
+        { name: 'Kapas (25 gram)', A: 1, B: 2, C: 3 },
+        { name: 'Kain segitiga/mittela', A: 2, B: 4, C: 6 },
+        { name: 'Gunting', A: 1, B: 1, C: 1 },
+        { name: 'Peniti', A: 12, B: 12, C: 12 },
+        { name: 'Sarung tangan sekali pakai', A: 2, B: 3, C: 4 },
+        { name: 'Masker', A: 2, B: 4, C: 6 },
+        { name: 'Pinset', A: 1, B: 1, C: 1 },
+        { name: 'Lampu senter', A: 1, B: 1, C: 1 },
+        { name: 'Gelas untuk cuci mata', A: 1, B: 1, C: 1 },
+        { name: 'Kantong plastik bersih', A: 1, B: 2, C: 3 },
+        { name: 'Aquades (100 ml larutan Saline)', A: 1, B: 1, C: 1 },
+        { name: 'Povidon Iodin (60 ml)', A: 1, B: 1, C: 1 },
+        { name: 'Alkohol 70%', A: 1, B: 1, C: 1 },
+        { name: 'Buku panduan P3K di tempat kerja', A: 1, B: 1, C: 1 },
+        { name: 'Buku catatan', A: 1, B: 1, C: 1 },
+        { name: 'Daftar isi kotak', A: 1, B: 1, C: 1 }
+    ];
+
+    const departments = ['Lab/QC', 'Dyeing', 'Winding', 'Warehouse', 'HSE', 'GA', 'Utility & Maintenance', 'Office'];
+
+    // ============================================================
+    // PHOTO UPLOAD — CORE FUNCTIONS
+    // ============================================================
+
+    /**
+     * Buat HTML komponen upload foto untuk dimasukkan ke dalam form.
+     * @param {string} formId - ID unik untuk form ini (contoh: 'apar', 'hydrant')
+     */
+    function getPhotoUploadHTML(formId) {
+        return `
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                📷 ${t('photo_upload_label')} <span class="text-gray-400 font-normal">(${currentLanguage === 'en' ? 'Optional' : 'Opsional'})</span>
+            </label>
+            <div class="photo-upload-area" id="upload-area-${formId}"
+                 onclick="document.getElementById('file-input-${formId}').click()"
+                 ondragover="handleDragOver(event, '${formId}')"
+                 ondragleave="handleDragLeave(event, '${formId}')"
+                 ondrop="handleDrop(event, '${formId}')">
+                <input type="file" id="file-input-${formId}" accept="image/*" multiple
+                       onchange="handleFileSelect(event, '${formId}')">
+                <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-sm text-gray-500">${t('photo_upload_hint')}</p>
+            </div>
+            <div id="photo-list-${formId}" class="mt-3 flex flex-wrap gap-2"></div>
+        </div>`;
+    }
+
+    function initPhotoState(formId) {
+        photoStates[formId] = [];
+    }
+
+    function handleDragOver(event, formId) {
+        event.preventDefault();
+        document.getElementById(`upload-area-${formId}`)?.classList.add('dragover');
+    }
+
+    function handleDragLeave(event, formId) {
+        document.getElementById(`upload-area-${formId}`)?.classList.remove('dragover');
+    }
+
+    function handleDrop(event, formId) {
+        event.preventDefault();
+        document.getElementById(`upload-area-${formId}`)?.classList.remove('dragover');
+        const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        processPhotoFiles(files, formId);
+    }
+
+    function handleFileSelect(event, formId) {
+        const files = Array.from(event.target.files);
+        processPhotoFiles(files, formId);
+        event.target.value = ''; // reset agar bisa pilih file yang sama lagi
+    }
+
+    function processPhotoFiles(files, formId) {
+        if (!photoStates[formId]) photoStates[formId] = [];
+
+        for (const file of files) {
+            if (photoStates[formId].length >= MAX_PHOTOS_PER_REPORT) {
+                showToast(t('photo_max_reached'), 'error');
+                break;
+            }
+            if (file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024) {
+                showToast(`${file.name}: ${t('photo_too_large')}`, 'error');
+                continue;
+            }
+
+            const photoId = `photo-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+            const previewUrl = URL.createObjectURL(file);
+
+            photoStates[formId].push({
+                id: photoId,
+                file,
+                previewUrl,
+                driveUrl: null,
+                status: 'pending' // pending → uploading → done | error
+            });
+
+            renderPhotoList(formId);
+            uploadPhotoToGoogleDrive(file, photoId, formId);
+        }
+    }
+
+    function renderPhotoList(formId) {
+        const container = document.getElementById(`photo-list-${formId}`);
+        if (!container) return;
+        const photos = photoStates[formId] || [];
+
+        container.innerHTML = photos.map(p => `
+            <div class="photo-thumb" id="thumb-${p.id}">
+                <img src="${p.previewUrl}" alt="foto">
+                ${p.status === 'uploading' ? `
+                    <div class="upload-progress">
+                        <div class="loader" style="width:20px;height:20px;border-width:2px;"></div>
+                    </div>` : ''}
+                ${p.status === 'done' ? `
+                    <div class="upload-done">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                    </div>` : ''}
+                ${p.status === 'error' ? `
+                    <div class="upload-progress" style="background:rgba(239,68,68,0.7)">
+                        <span>!</span>
+                    </div>` : ''}
+                ${p.status !== 'uploading' ? `
+                    <div class="remove-btn" onclick="removePhoto('${formId}', '${p.id}')">×</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function removePhoto(formId, photoId) {
+        if (!photoStates[formId]) return;
+        photoStates[formId] = photoStates[formId].filter(p => p.id !== photoId);
+        renderPhotoList(formId);
+    }
+
+    /**
+     * Upload satu foto ke Google Drive via Apps Script endpoint.
+     * Foto dikonversi ke base64 lalu dikirim via POST.
+     */
+    async function uploadPhotoToGoogleDrive(file, photoId, formId) {
+        // Set status uploading
+        const photoEntry = photoStates[formId]?.find(p => p.id === photoId);
+        if (!photoEntry) return;
+        photoEntry.status = 'uploading';
+        renderPhotoList(formId);
+
+        try {
+            // Kompres/resize jika perlu (max lebar 1200px, kualitas 0.85)
+            const base64 = await compressImageToBase64(file, 1200, 0.85);
+            const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+
+            const response = await fetch(GOOGLE_SHEETS_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'uploadPhoto',
+                    base64: base64,
+                    fileName: fileName,
+                    mimeType: file.type || 'image/jpeg'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                photoEntry.driveUrl = result.directUrl;
+                photoEntry.viewUrl = result.viewUrl;
+                photoEntry.fileId = result.fileId;
+                photoEntry.status = 'done';
+            } else {
+                throw new Error(result.message || 'Upload gagal');
+            }
+        } catch (err) {
+            console.error('Upload foto gagal:', err);
+            photoEntry.status = 'error';
+            photoEntry.driveUrl = null;
+        }
+
+        renderPhotoList(formId);
+    }
+
+    /**
+     * Kompres gambar menggunakan Canvas API sebelum upload.
+     * @returns {Promise<string>} Base64 data URL
+     */
+    function compressImageToBase64(file, maxWidth = 1200, quality = 0.85) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Tentukan output format
+                    const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    resolve(canvas.toDataURL(outputType, quality));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    /**
+     * Ambil semua URL foto yang sudah berhasil di-upload untuk suatu form.
+     * @param {string} formId
+     * @returns {string[]} Array of Google Drive direct URLs
+     */
+    function getUploadedPhotoUrls(formId) {
+        return (photoStates[formId] || [])
+            .filter(p => p.status === 'done' && p.driveUrl)
+            .map(p => p.driveUrl);
+    }
+
+    /**
+     * Cek apakah masih ada foto yang sedang uploading.
+     */
+    function hasPhotosUploading(formId) {
+        return (photoStates[formId] || []).some(p => p.status === 'uploading');
+    }
+
+    // ============================================================
+    // GOOGLE SHEETS SYNC
+    // ============================================================
+    async function syncToGoogleSheets(reports) {
+        if (!reports || reports.length === 0) return;
+        try {
+            const payload = {
+                action: 'syncAll',
+                reports: reports.map(r => ({
+                    backendId: r.__backendId,
+                    date: r.report_date || '',
+                    type: r.type || '',
+                    category: r.category || '',
+                    reporter: r.reporter_name || '',
+                    department: r.department || '',
+                    location: r.location || '',
+                    status: r.status || '',
+                    priority: r.priority || 'Normal',
+                    details: r.details || '',
+                    description: r.description || '',
+                    boxType: r.box_type || '',
+                    itemsStatus: r.items_status || '',
+                    adminNotes: r.admin_notes || '',
+                    completedDate: r.completed_date || '',
+                    photoUrls: r.photo_urls || []
+                }))
+            };
+
+            await fetch(GOOGLE_SHEETS_API, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+        } catch (error) {
+            console.error('Sync to Google Sheets failed:', error);
+        }
+    }
+
+    function loadLocalReports() {
+        try {
+            const raw = localStorage.getItem(LOCAL_REPORTS_KEY);
+            allReports = raw ? JSON.parse(raw) : [];
+        } catch {
+            allReports = [];
+        }
+    }
+
+    function persistLocalReports() {
+        localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(allReports));
+    }
+
+    function fetchReportsWithJsonp() {
+        return new Promise((resolve, reject) => {
+            const callbackName = `safeTrackJsonp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            const script = document.createElement('script');
+            const cleanup = () => {
+                if (script.parentNode) script.parentNode.removeChild(script);
+                delete window[callbackName];
+            };
+            window[callbackName] = (payload) => {
+                cleanup();
+                if (payload?.status === 'success' && Array.isArray(payload.reports)) {
+                    resolve(payload.reports.filter(r => r.__backendId));
+                } else {
+                    reject(new Error('Format respons JSONP tidak valid'));
+                }
+            };
+            script.onerror = () => { cleanup(); reject(new Error('JSONP gagal')); };
+            script.src = `${GOOGLE_SHEETS_API}?action=getReports&callback=${callbackName}&_=${Date.now()}`;
+            document.body.appendChild(script);
+        });
+    }
+
+    async function fetchReportsFromGoogleSheets() {
+        try {
+            const response = await fetch(`${GOOGLE_SHEETS_API}?action=getReports&_=${Date.now()}`, {
+                method: 'GET', mode: 'cors', cache: 'no-store'
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const payload = await response.json();
+            if (payload.status !== 'success' || !Array.isArray(payload.reports)) throw new Error('Format tidak valid');
+            return payload.reports.filter(r => r.__backendId);
+        } catch (error) {
+            try { return await fetchReportsWithJsonp(); }
+            catch { return []; }
+        }
+    }
+
+    function mergeReports(remoteReports, localReports) {
+        const map = new Map();
+        remoteReports.forEach(r => map.set(r.__backendId, r));
+        localReports.forEach(r => { if (r.__backendId && !map.has(r.__backendId)) map.set(r.__backendId, r); });
+        return Array.from(map.values()).sort((a, b) => new Date(b.report_date||0) - new Date(a.report_date||0));
+    }
+
+    function generateBackendId() {
+        return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function getDeviceDateTimeIso() {
+        const now = new Date();
+        if (isNaN(now.getTime())) return '';
+        const pad = n => String(n).padStart(2, '0');
+        const off = -now.getTimezoneOffset();
+        const sign = off >= 0 ? '+' : '-';
+        const abs = Math.abs(off);
+        return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}${sign}${pad(Math.floor(abs/60))}:${pad(abs%60)}`;
+    }
+
+    function getReportDateTime() { return getDeviceDateTimeIso() || new Date().toISOString(); }
+
+    function formatDateTime(value) {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return String(value);
+        return date.toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    async function createReport(data) {
+        if (window.dataSdk?.create) return await window.dataSdk.create(data);
+        const report = { ...data, __backendId: generateBackendId() };
+        allReports = [report, ...allReports];
+        persistLocalReports();
+        syncToGoogleSheets(allReports);
+        if (currentPage === 'dashboard') renderDashboard();
+        if (currentPage === 'manage-reports') renderManageReports();
+        return { isOk: true, value: report };
+    }
+
+    async function updateReport(report) {
+        if (window.dataSdk?.update) return await window.dataSdk.update(report);
+        allReports = allReports.map(r => r.__backendId === report.__backendId ? report : r);
+        persistLocalReports();
+        syncToGoogleSheets(allReports);
+        if (currentPage === 'dashboard') renderDashboard();
+        if (currentPage === 'manage-reports') renderManageReports();
+        return { isOk: true, value: report };
+    }
+
+    async function deleteReportFromGoogleSheets(backendId) {
+        try {
+            const response = await fetch(GOOGLE_SHEETS_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'deleteReport', backendId })
+            });
+            const payload = await response.json();
+            if (payload.status !== 'success') throw new Error(payload.message);
+            return { isOk: true };
+        } catch (error) {
+            return { isOk: false, error };
+        }
+    }
+
+    async function deleteReport(report) {
+        if (window.dataSdk?.delete) return await window.dataSdk.delete(report);
+        const cloudDelete = await deleteReportFromGoogleSheets(report.__backendId);
+        if (!cloudDelete.isOk) return { isOk: false };
+        allReports = allReports.filter(r => r.__backendId !== report.__backendId);
+        persistLocalReports();
+        syncToGoogleSheets(allReports);
+        if (currentPage === 'dashboard') renderDashboard();
+        if (currentPage === 'manage-reports') renderManageReports();
+        return { isOk: true };
+    }
+
+    const dataHandler = {
+        onDataChanged(data) {
+            allReports = data || [];
+            syncToGoogleSheets(allReports);
+            if (currentPage === 'dashboard') renderDashboard();
+            else if (currentPage === 'manage-reports') renderManageReports();
+        }
+    };
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    async function initApp() {
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange: async (config) => {
+                    document.getElementById('app-title-login').textContent = config.app_title || defaultConfig.app_title;
+                    document.getElementById('company-name-login').textContent = config.company_name || defaultConfig.company_name;
+                    document.getElementById('sidebar-title').textContent = config.app_title || defaultConfig.app_title;
+                },
+                mapToCapabilities: (config) => ({ recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined }),
+                mapToEditPanelValues: (config) => new Map([
+                    ['company_name', config.company_name || defaultConfig.company_name],
+                    ['app_title', config.app_title || defaultConfig.app_title],
+                    ['admin_password', config.admin_password || defaultConfig.admin_password]
+                ])
+            });
+        }
+
+        loadLocalReports();
+        const cloudReports = await fetchReportsFromGoogleSheets();
+        allReports = mergeReports(cloudReports, allReports);
+        persistLocalReports();
+        if (allReports.length > cloudReports.length) syncToGoogleSheets(allReports);
+
+        if (window.dataSdk) {
+            const result = await window.dataSdk.init(dataHandler);
+            if (!result.isOk) console.error('Failed to initialize data SDK');
+        }
+    }
+
+    // ============================================================
+    // AUTH
+    // ============================================================
+    function selectRole(role) {
+        const name = document.getElementById('user-name-input').value.trim();
+        const dept = document.getElementById('user-dept-input').value;
+        if (!name) { showToast(t('toast_name_required'), 'error'); return; }
+        if (!dept) { showToast(t('toast_department_required'), 'error'); return; }
+        if (role === 'admin') { showAdminPasswordPrompt(name, dept); return; }
+        currentUser = { name, department: dept, role };
+        document.getElementById('role-selection').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        document.getElementById('user-display-name').textContent = name;
+        document.getElementById('user-role-display').textContent = dept;
+        document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('admin-menu').classList.add('hidden');
+        navigateTo('dashboard');
+    }
+
+    function showAdminPasswordPrompt(name, dept) {
+        const modal = document.getElementById('modal-container');
+        modal.innerHTML = `
+            <div class="modal-overlay fixed inset-0 flex items-center justify-center p-4" onclick="closeModal(event)">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full fade-in" onclick="event.stopPropagation()">
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-xl font-bold text-gray-800">🔐 Admin Access</h2>
+                        <p class="text-sm text-gray-500">Masukkan password admin</p>
+                    </div>
+                    <form onsubmit="verifyAdminPassword(event, '${name}', '${dept}')" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password Admin</label>
+                            <input type="password" id="admin-password-input" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Masukkan password" autofocus>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" onclick="closeModal()" class="flex-1 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
+                            <button type="submit" class="flex-1 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Masuk</button>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+        modal.classList.remove('hidden');
+        setTimeout(() => document.getElementById('admin-password-input')?.focus(), 100);
+    }
+
+    function verifyAdminPassword(e, name, dept) {
+        e.preventDefault();
+        const password = document.getElementById('admin-password-input').value;
+        const currentPassword = window.elementSdk?.config?.admin_password || defaultConfig.admin_password;
+        if (password !== currentPassword) {
+            showToast('Password salah!', 'error');
+            document.getElementById('admin-password-input').value = '';
+            return;
+        }
+        currentUser = { name, department: dept, role: 'admin' };
+        document.getElementById('role-selection').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        document.getElementById('user-display-name').textContent = name;
+        document.getElementById('user-role-display').textContent = 'Administrator';
+        document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('admin-menu').classList.remove('hidden');
+        closeModal();
+        showToast(`Selamat datang, Admin ${name}!`);
+        navigateTo('dashboard');
+    }
+
+    function logout() {
+        currentUser = { name: '', department: '', role: 'employee' };
+        document.getElementById('role-selection').classList.remove('hidden');
+        document.getElementById('main-app').classList.add('hidden');
+        document.getElementById('admin-menu').classList.add('hidden');
+        document.getElementById('user-name-input').value = '';
+        document.getElementById('user-dept-input').value = '';
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+    function toggleSubmenu(id) {
+        const submenu = document.getElementById(`${id}-submenu`);
+        const arrow = document.getElementById(`${id}-arrow`);
+        submenu.classList.toggle('open');
+        arrow.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : '';
+    }
+
+    function openSidebar() {
+        document.getElementById('sidebar').classList.remove('-translate-x-full');
+        document.getElementById('sidebar-overlay').classList.remove('hidden');
+    }
+
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+        document.getElementById('sidebar-overlay').classList.add('hidden');
+    }
+
+    function navigateTo(page) {
+        currentPage = page;
+        document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+        const activeItem = document.querySelector(`[data-page="${page}"]`);
+        if (activeItem) activeItem.classList.add('active');
+        const content = document.getElementById('content-area');
+        content.innerHTML = '<div class="flex justify-center py-12"><div class="loader"></div></div>';
+        if (window.innerWidth < 768) closeSidebar();
+        setTimeout(() => {
+            switch(page) {
+                case 'dashboard': renderDashboard(); break;
+                case 'inspeksi-apar': renderInspeksiAPAR(); break;
+                case 'inspeksi-hydrant': renderInspeksiHydrant(); break;
+                case 'inspeksi-p3k': renderInspeksiP3K(); break;
+                case 'inspeksi-peralatan': renderInspeksiPeralatan(); break;
+                case 'permit-kerja': renderPermitKerja(); break;
+                case 'jsa': renderJSA(); break;
+                case 'kondisi-tidak-aman': renderKondisiTidakAman(); break;
+                case 'request-apd': renderRequestAPD(); break;
+                case 'saran-lainnya': renderSaranLainnya(); break;
+                case 'manage-reports': renderManageReports(); break;
+                default: renderDashboard();
+            }
+        }, 100);
+    }
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+        toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg fade-in flex items-center gap-2`;
+        toast.innerHTML = `
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'}
+            </svg>
+            <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    function renderDashboard() {
+        const visibleReports = allReports;
+        const waiting = visibleReports.filter(r => r.status === 'Menunggu Konfirmasi').length;
+        const processing = visibleReports.filter(r => r.status === 'Diproses').length;
+        const completed = visibleReports.filter(r => r.status === 'Selesai').length;
+        const needsAttention = visibleReports.filter(r => ['Perlu Perbaikan','Perlu Isi Ulang','Tidak Layak Pakai'].includes(r.status)).length;
+        const highPriority = visibleReports.filter(r => r.priority === 'Tinggi').length;
+        const totalReports = visibleReports.length;
+        const completionRate = totalReports > 0 ? Math.round((completed / totalReports) * 100) : 0;
+        const deptStats = {};
+        if (currentUser.role === 'admin') allReports.forEach(r => { deptStats[r.department] = (deptStats[r.department]||0)+1; });
+        const typeStats = {};
+        visibleReports.forEach(r => { typeStats[r.type] = (typeStats[r.type]||0)+1; });
+
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                    <p class="text-gray-500">${currentLanguage==='en'?'Welcome':'Selamat datang'}, ${currentUser.name}! ${currentUser.role==='admin'?'(Administrator)':''}</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    ${[
+                        {label:currentLanguage==='en'?'Waiting':'Menunggu', val:waiting, color:'amber', icon:'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'},
+                        {label:currentLanguage==='en'?'Processing':'Diproses', val:processing, color:'blue', icon:'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'},
+                        {label:currentLanguage==='en'?'Completed':'Selesai', val:completed, color:'emerald', icon:'M5 13l4 4L19 7'},
+                        {label:currentLanguage==='en'?'Needs Attention':'Perlu Perhatian', val:needsAttention, color:'red', icon:'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'}
+                    ].map(s=>`
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-gray-500 text-sm">${s.label}</p><p class="text-3xl font-bold text-${s.color}-500">${s.val}</p></div>
+                                <div class="w-12 h-12 bg-${s.color}-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-${s.color}-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${s.icon}"></path></svg>
+                                </div>
+                            </div>
+                        </div>`).join('')}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-6 text-white">
+                        <p class="text-emerald-100 text-sm">${currentLanguage==='en'?'Total Reports':'Total Laporan'}</p>
+                        <p class="text-3xl font-bold">${totalReports}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl p-6 text-white">
+                        <p class="text-purple-100 text-sm">${currentLanguage==='en'?'Completion Rate':'Tingkat Penyelesaian'}</p>
+                        <p class="text-3xl font-bold">${completionRate}%</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-500 to-orange-600 rounded-xl p-6 text-white">
+                        <p class="text-red-100 text-sm">${currentLanguage==='en'?'High Priority':'Prioritas Tinggi'}</p>
+                        <p class="text-3xl font-bold">${highPriority}</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-4 border-b border-gray-100"><h3 class="font-semibold text-gray-800">Laporan Terbaru</h3></div>
+                    <div class="divide-y divide-gray-100">
+                        ${visibleReports.length === 0
+                            ? `<div class="p-8 text-center text-gray-500"><p>Belum ada laporan</p></div>`
+                            : visibleReports.slice(0,10).map(r=>`
+                                <button type="button" onclick="viewReport('${r.__backendId}')" class="w-full text-left p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full ${getTypeColor(r.type)} flex items-center justify-center text-white font-bold">${getTypeIcon(r.type)}</div>
+                                        <div>
+                                            <p class="font-medium text-gray-800">${r.type} - ${r.category||''}</p>
+                                            <p class="text-sm text-gray-500">${r.location||r.department} • ${formatDateTime(r.report_date)}
+                                            ${r.photo_urls?.length ? `<span class="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">📷 ${r.photo_urls.length} foto</span>` : ''}</p>
+                                        </div>
+                                    </div>
+                                    <span class="status-badge ${getStatusClass(r.status)}">${r.status}</span>
+                                </button>`).join('')}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function getTypeColor(type) {
+        const colors = {'Inspeksi APAR':'bg-red-500','Inspeksi Hydrant':'bg-orange-500','Inspeksi P3K':'bg-pink-500','Inspeksi Peralatan':'bg-purple-500','Permit Kerja':'bg-blue-500','JSA':'bg-indigo-500','Kondisi Tidak Aman':'bg-amber-500','Request APD':'bg-cyan-500'};
+        return colors[type]||'bg-gray-500';
+    }
+
+    function getTypeIcon(type) {
+        const icons = {'Inspeksi APAR':'🧯','Inspeksi Hydrant':'🚒','Inspeksi P3K':'🩹','Inspeksi Peralatan':'🔧','Permit Kerja':'📋','JSA':'⚠️','Kondisi Tidak Aman':'🚨','Request APD':'🦺'};
+        return icons[type]||'📄';
+    }
+
+    function getStatusClass(status) {
+        if (status==='Menunggu Konfirmasi') return 'status-waiting';
+        if (status==='Diproses') return 'status-processing';
+        if (status==='Selesai') return 'status-completed';
+        return 'status-needs-attention';
+    }
+
+    function getDepartmentOptions() {
+        return departments.map(d=>`<option value="${d}">${d}</option>`).join('');
+    }
+
+    // ============================================================
+    // FORM: INSPEKSI APAR
+    // ============================================================
+    function renderInspeksiAPAR() {
+        initPhotoState('apar');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">${currentLanguage==='en'?'🧯 Fire Extinguisher Inspection':'🧯 Inspeksi APAR'}</h1>
+                    <p class="text-gray-500">${currentLanguage==='en'?'Fire Extinguisher inspection form':'Form inspeksi Alat Pemadam Api Ringan'}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="apar-form" onsubmit="submitInspeksiAPAR(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Location':'Lokasi APAR'}</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage==='en'?'Example: Building A Floor 2':'Contoh: Gedung A Lt. 2'}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'APAR Number':'Nomor APAR'}</label>
+                                <input type="text" name="apar_number" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: APAR-001">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Type':'Jenis APAR'}</label>
+                                <select name="apar_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_type')}</option>
+                                    <option value="Powder">Powder</option>
+                                    <option value="CO2">CO2</option>
+                                    <option value="Foam">Foam</option>
+                                    <option value="Air">Air</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Expiry Date':'Tanggal Kadaluarsa'}</label>
+                                <input type="date" name="expiry_date" required class="w-full px-4 py-2 border border-gray-200 rounded-lg">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage==='en'?'Inspection Checklist':'Checklist Inspeksi'}</label>
+                            <div class="space-y-2 bg-gray-50 rounded-lg p-4">
+                                ${(currentLanguage==='en'?['Seal is in good condition','Safety pin is installed','Pressure is normal','Hose is in good condition','Nozzle is not clogged','Label is readable','Position is easily accessible']:['Segel dalam kondisi baik','Pin pengaman terpasang','Tekanan dalam kondisi baik','Selang dalam kondisi baik','Nozzle tidak tersumbat','Label petunjuk terbaca jelas','Posisi mudah dijangkau']).map((item,i)=>`
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500">
+                                        <span class="text-gray-700">${item}</span>
+                                    </label>`).join('')}
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Overall Condition':'Kondisi Keseluruhan'}</label>
+                            <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                <option value="">${t('option_select_condition')}</option>
+                                <option value="Baik">${currentLanguage==='en'?'Good':'Baik'}</option>
+                                <option value="Perlu Perbaikan">${currentLanguage==='en'?'Needs Repair':'Perlu Perbaikan'}</option>
+                                <option value="Tidak Layak Pakai">${currentLanguage==='en'?'Unusable':'Tidak Layak Pakai'}</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Notes':'Catatan'}</label>
+                            <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="${currentLanguage==='en'?'Add notes if needed':'Tambahkan catatan jika diperlukan'}"></textarea>
+                        </div>
+                        ${getPhotoUploadHTML('apar')}
+                        <button type="submit" id="apar-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
+                            ${t('btn_submit_inspection')}
+                        </button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitInspeksiAPAR(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('apar')) { showToast('Tunggu foto selesai diunggah...', 'info'); return; }
+        const btn = document.getElementById('apar-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<div class="loader mx-auto"></div>';
+        if (allReports.length >= 999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_inspection'); return; }
+        const data = {
+            type: 'Inspeksi APAR', category: form.apar_type.value, location: form.location.value,
+            department: currentUser.department, reporter_name: currentUser.name, report_date: getReportDateTime(),
+            status: form.overall_condition.value==='Baik'?'Selesai':form.overall_condition.value,
+            details: `No: ${form.apar_number.value}, Exp: ${form.expiry_date.value}`,
+            description: form.notes.value||'-',
+            priority: form.overall_condition.value==='Tidak Layak Pakai'?'Tinggi':'Normal',
+            admin_notes: '', completed_date: '',
+            photo_urls: getUploadedPhotoUrls('apar')
+        };
+        const result = await createReport(data);
+        btn.disabled = false; btn.innerHTML = t('btn_submit_inspection');
+        if (result.isOk) { showToast(currentLanguage==='en'?'Inspection report submitted!':'Laporan inspeksi APAR berhasil dikirim!'); form.reset(); initPhotoState('apar'); renderPhotoList('apar'); }
+        else showToast(t('toast_send_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: INSPEKSI HYDRANT
+    // ============================================================
+    function renderInspeksiHydrant() {
+        initPhotoState('hydrant');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">${currentLanguage==='en'?'🚒 Hydrant Inspection':'🚒 Inspeksi Hydrant'}</h1>
+                    <p class="text-gray-500">${currentLanguage==='en'?'Hydrant inspection form':'Form inspeksi Hydrant dan Box Hydrant'}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="hydrant-form" onsubmit="submitInspeksiHydrant(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Location':'Lokasi Hydrant'}</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="${currentLanguage==='en'?'Example: North Parking':'Contoh: Area Parkir Utara'}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Hydrant ID':'Nomor/ID Hydrant'}</label>
+                                <input type="text" name="hydrant_id" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="HYD-001">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Type':'Jenis Hydrant'}</label>
+                                <select name="hydrant_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_type')}</option>
+                                    <option value="Indoor">Indoor (Box Hydrant)</option>
+                                    <option value="Outdoor">Outdoor (Pillar Hydrant)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Checklist</label>
+                            <div class="space-y-2 bg-gray-50 rounded-lg p-4">
+                                ${(currentLanguage==='en'?['Box is not damaged','Hose is in good condition','Nozzle functions properly','Valve opens/closes easily','Water pressure sufficient','Area unobstructed','Instructions available']:['Box tidak rusak/berkarat','Selang kondisi baik','Nozzle berfungsi','Valve mudah dibuka/ditutup','Tekanan air cukup','Area bebas hambatan','Petunjuk penggunaan ada']).map((item,i)=>`
+                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500"><span class="text-gray-700">${item}</span></label>`).join('')}
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Overall Condition':'Kondisi Keseluruhan'}</label>
+                            <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                <option value="">${t('option_select_condition')}</option>
+                                <option value="Baik">${currentLanguage==='en'?'Good':'Baik'}</option>
+                                <option value="Perlu Perbaikan">${currentLanguage==='en'?'Needs Repair':'Perlu Perbaikan'}</option>
+                                <option value="Tidak Layak Pakai">${currentLanguage==='en'?'Unusable':'Tidak Layak Pakai'}</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
+                            <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea>
+                        </div>
+                        ${getPhotoUploadHTML('hydrant')}
+                        <button type="submit" id="hydrant-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">${t('btn_submit_inspection')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitInspeksiHydrant(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('hydrant')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('hydrant-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_inspection'); return; }
+        const data = {
+            type:'Inspeksi Hydrant', category:form.hydrant_type.value, location:form.location.value,
+            department:currentUser.department, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:form.overall_condition.value==='Baik'?'Selesai':form.overall_condition.value,
+            details:`ID: ${form.hydrant_id.value}`, description:form.notes.value||'-',
+            priority:form.overall_condition.value==='Tidak Layak Pakai'?'Tinggi':'Normal',
+            admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('hydrant')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_inspection');
+        if (result.isOk) { showToast(currentLanguage==='en'?'Hydrant inspection submitted!':'Laporan inspeksi Hydrant berhasil dikirim!'); form.reset(); initPhotoState('hydrant'); renderPhotoList('hydrant'); }
+        else showToast(t('toast_send_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: INSPEKSI P3K
+    // ============================================================
+    function renderInspeksiP3K() {
+        initPhotoState('p3k');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">${currentLanguage==='en'?'🩹 First Aid Box Inspection':'🩹 Inspeksi P3K'}</h1>
+                    <p class="text-gray-500">${currentLanguage==='en'?'First aid box inspection form (Permenaker No. 15/2008)':'Form inspeksi Kotak P3K sesuai Permenaker No. 15 Tahun 2008'}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="p3k-form" onsubmit="submitInspeksiP3K(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Location':'Lokasi Kotak P3K'}</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="${currentLanguage==='en'?'Example: Room A':'Contoh: Ruang Produksi A'}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Box Type':'Tipe Kotak P3K'}</label>
+                                <select name="box_type" required onchange="updateP3KChecklist(this.value)" class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_box_type')}</option>
+                                    <option value="A">Tipe A (1-25 orang)</option>
+                                    <option value="B">Tipe B (26-50 orang)</option>
+                                    <option value="C">Tipe C (51-100 orang)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="p3k-checklist" class="mb-4 hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Checklist Isi Kotak P3K</label>
+                            <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                                <table class="w-full text-sm"><thead><tr class="border-b border-gray-200">
+                                    <th class="text-left py-2 font-medium text-gray-700">Isi Kotak</th>
+                                    <th class="text-center py-2 font-medium text-gray-700 w-20">Jumlah</th>
+                                    <th class="text-center py-2 font-medium text-gray-700 w-32">Kondisi</th>
+                                </tr></thead><tbody id="p3k-items-body"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Tambahan</label>
+                            <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea>
+                        </div>
+                        ${getPhotoUploadHTML('p3k')}
+                        <button type="submit" id="p3k-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">${t('btn_submit_inspection')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    function updateP3KChecklist(boxType) {
+        const checklist = document.getElementById('p3k-checklist');
+        const tbody = document.getElementById('p3k-items-body');
+        if (!boxType) { checklist.classList.add('hidden'); return; }
+        checklist.classList.remove('hidden');
+        tbody.innerHTML = p3kItems.map((item,i) => `
+            <tr class="border-b border-gray-100">
+                <td class="py-2">${item.name}</td>
+                <td class="text-center py-2 font-medium">${item[boxType]}</td>
+                <td class="text-center py-2">
+                    <select name="item_${i}" required class="px-2 py-1 border border-gray-200 rounded text-xs bg-white">
+                        <option value="Baik">Baik</option>
+                        <option value="Perlu Isi Ulang">Perlu Isi Ulang</option>
+                    </select>
+                </td>
+            </tr>`).join('');
+    }
+
+    async function submitInspeksiP3K(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('p3k')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('p3k-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_inspection'); return; }
+        const boxType = form.box_type.value;
+        let itemsStatus = []; let needsRefill = false;
+        p3kItems.forEach((item,i) => { const s = form[`item_${i}`]?.value||'Baik'; if (s==='Perlu Isi Ulang') { needsRefill=true; itemsStatus.push(`${item.name}: ${s}`); } });
+        const data = {
+            type:'Inspeksi P3K', category:`Kotak Tipe ${boxType}`, location:form.location.value,
+            department:currentUser.department, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:needsRefill?'Perlu Isi Ulang':'Selesai', box_type:boxType,
+            items_status:itemsStatus.join('; ')||'Semua item lengkap',
+            details:`Tipe ${boxType}`, description:form.notes.value||'-',
+            priority:needsRefill?'Normal':'Rendah', admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('p3k')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_inspection');
+        if (result.isOk) { showToast(currentLanguage==='en'?'P3K inspection submitted!':'Laporan inspeksi P3K berhasil dikirim!'); form.reset(); document.getElementById('p3k-checklist').classList.add('hidden'); initPhotoState('p3k'); renderPhotoList('p3k'); }
+        else showToast(t('toast_send_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: INSPEKSI PERALATAN
+    // ============================================================
+    function renderInspeksiPeralatan() {
+        initPhotoState('peralatan');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">${currentLanguage==='en'?'🔧 Work Equipment Inspection':'🔧 Inspeksi Peralatan Kerja'}</h1>
+                    <p class="text-gray-500">${currentLanguage==='en'?'Tools and machinery inspection form':'Form inspeksi peralatan dan mesin kerja'}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="peralatan-form" onsubmit="submitInspeksiPeralatan(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage==='en'?'Equipment Name':'Nama Peralatan'}</label>
+                                <input type="text" name="equipment_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Forklift, Mesin Produksi..."></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">ID/Nomor Asset</label>
+                                <input type="text" name="asset_id" class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="AST-001"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_department')}</option>${getDepartmentOptions()}</select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Gudang B..."></div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Checklist</label>
+                            <div class="space-y-2 bg-gray-50 rounded-lg p-4">
+                                ${(currentLanguage==='en'?['Physical condition good','Operational function normal','Safety systems functioning','Warning labels installed','Maintenance on schedule','Documents/certifications complete']:['Kondisi fisik baik','Fungsi operasional normal','Sistem keamanan berfungsi','Label peringatan terpasang','Maintenance sesuai jadwal','Dokumen/sertifikasi lengkap']).map((item,i)=>`
+                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500"><span class="text-gray-700">${item}</span></label>`).join('')}
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi Keseluruhan</label>
+                            <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                <option value="">${t('option_select_condition')}</option>
+                                <option value="Baik">Baik</option>
+                                <option value="Perlu Perbaikan">Perlu Perbaikan</option>
+                                <option value="Tidak Layak Pakai">Tidak Layak Pakai</option>
+                            </select>
+                        </div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Catatan/Temuan</label>
+                            <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        ${getPhotoUploadHTML('peralatan')}
+                        <button type="submit" id="peralatan-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold">${t('btn_submit_inspection')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitInspeksiPeralatan(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('peralatan')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('peralatan-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_inspection'); return; }
+        const data = {
+            type:'Inspeksi Peralatan', category:form.equipment_name.value, location:form.location.value,
+            department:form.department.value, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:form.overall_condition.value==='Baik'?'Selesai':form.overall_condition.value,
+            details:`Asset ID: ${form.asset_id.value||'-'}`, description:form.notes.value||'-',
+            priority:form.overall_condition.value==='Tidak Layak Pakai'?'Tinggi':'Normal',
+            admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('peralatan')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_inspection');
+        if (result.isOk) { showToast('Laporan inspeksi peralatan berhasil dikirim!'); form.reset(); initPhotoState('peralatan'); renderPhotoList('peralatan'); }
+        else showToast(t('toast_send_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: PERMIT KERJA
+    // ============================================================
+    function renderPermitKerja() {
+        initPhotoState('permit');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6"><h1 class="text-2xl font-bold text-gray-800">📋 Permit Kerja</h1><p class="text-gray-500">Form pengajuan izin kerja berbahaya</p></div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="permit-form" onsubmit="submitPermitKerja(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Jenis Pekerjaan</label>
+                                <select name="work_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_type')}</option>
+                                    <option value="Pekerjaan Panas">Pekerjaan Panas (Hot Work)</option>
+                                    <option value="Bekerja di Ketinggian">Bekerja di Ketinggian</option>
+                                    <option value="Ruang Terbatas">Ruang Terbatas (Confined Space)</option>
+                                    <option value="Pekerjaan Listrik">Pekerjaan Listrik</option>
+                                    <option value="Penggalian">Penggalian (Excavation)</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_department')}</option>${getDepartmentOptions()}</select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Pekerjaan</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Contoh: Area Boiler"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pelaksanaan</label>
+                                <input type="date" name="work_date" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Waktu Mulai</label>
+                                <input type="time" name="start_time" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Waktu Selesai</label>
+                                <input type="time" name="end_time" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></div>
+                        </div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Uraian Pekerjaan</label>
+                            <textarea name="work_description" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Nama Pekerja</label>
+                            <textarea name="workers" rows="2" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Budi, Andi, Sari"></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">APD yang Diperlukan</label>
+                            <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        ${getPhotoUploadHTML('permit')}
+                        <button type="submit" id="permit-submit-btn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold">${t('btn_submit_permit')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitPermitKerja(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('permit')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('permit-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_permit'); return; }
+        const data = {
+            type:'Permit Kerja', category:form.work_type.value, location:form.location.value,
+            department:form.department.value, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:'Menunggu Konfirmasi', details:`Tanggal: ${form.work_date.value}, ${form.start_time.value}-${form.end_time.value}`,
+            description:form.work_description.value, priority:'Normal', admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('permit')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_permit');
+        if (result.isOk) { showToast('Pengajuan permit kerja berhasil dikirim!'); form.reset(); initPhotoState('permit'); renderPhotoList('permit'); }
+        else showToast(t('toast_submit_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: JSA
+    // ============================================================
+    function renderJSA() {
+        initPhotoState('jsa');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6"><h1 class="text-2xl font-bold text-gray-800">⚠️ Job Safety Analysis (JSA)</h1><p class="text-gray-500">Form pengajuan analisis keselamatan kerja</p></div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="jsa-form" onsubmit="submitJSA(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Nama Pekerjaan</label>
+                                <input type="text" name="job_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Perbaikan Mesin Produksi"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_department')}</option>${getDepartmentOptions()}</select></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></div>
+                        </div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Langkah-langkah Pekerjaan</label>
+                            <textarea name="job_steps" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Potensi Bahaya</label>
+                            <textarea name="hazards" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Tindakan Pencegahan</label>
+                            <textarea name="controls" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">APD yang Diperlukan</label>
+                            <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        ${getPhotoUploadHTML('jsa')}
+                        <button type="submit" id="jsa-submit-btn" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-semibold">${t('btn_submit_jsa')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitJSA(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('jsa')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('jsa-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_jsa'); return; }
+        const data = {
+            type:'JSA', category:form.job_name.value, location:form.location.value,
+            department:form.department.value, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:'Menunggu Konfirmasi', details:`Bahaya: ${form.hazards.value.substring(0,100)}...`,
+            description:`Langkah: ${form.job_steps.value} | Pencegahan: ${form.controls.value}`,
+            priority:'Normal', admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('jsa')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_jsa');
+        if (result.isOk) { showToast('Pengajuan JSA berhasil dikirim!'); form.reset(); initPhotoState('jsa'); renderPhotoList('jsa'); }
+        else showToast(t('toast_submit_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: KONDISI TIDAK AMAN
+    // ============================================================
+    function renderKondisiTidakAman() {
+        initPhotoState('unsafe');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6"><h1 class="text-2xl font-bold text-gray-800">🚨 Laporan Kondisi Tidak Aman</h1><p class="text-gray-500">Laporkan kondisi berbahaya yang Anda temukan</p></div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="unsafe-form" onsubmit="submitKondisiTidakAman(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                                <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_category')}</option>
+                                    <option value="Lantai Licin">Lantai Licin/Basah</option>
+                                    <option value="Instalasi Listrik">Instalasi Listrik Berbahaya</option>
+                                    <option value="Kebocoran">Kebocoran (Gas/Cairan)</option>
+                                    <option value="Peralatan Rusak">Peralatan Rusak</option>
+                                    <option value="Pencahayaan">Pencahayaan Kurang</option>
+                                    <option value="Tumpahan Bahan Kimia">Tumpahan Bahan Kimia</option>
+                                    <option value="Akses Darurat">Akses Darurat Terhalang</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Bahaya</label>
+                                <select name="severity" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_level')}</option>
+                                    <option value="Rendah">Rendah - Potensi cedera ringan</option>
+                                    <option value="Sedang">Sedang - Potensi cedera serius</option>
+                                    <option value="Tinggi">Tinggi - Potensi fatal/kritis</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_department')}</option>${getDepartmentOptions()}</select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Spesifik</label>
+                                <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Lantai 2 dekat toilet"></div>
+                        </div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Kondisi</label>
+                            <textarea name="description" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Saran Perbaikan</label>
+                            <textarea name="suggestion" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        ${getPhotoUploadHTML('unsafe')}
+                        <button type="submit" id="unsafe-submit-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold">${t('btn_submit_report')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitKondisiTidakAman(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('unsafe')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('unsafe-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_report'); return; }
+        const data = {
+            type:'Kondisi Tidak Aman', category:form.category.value, location:form.location.value,
+            department:form.department.value, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:'Menunggu Konfirmasi', details:`Tingkat: ${form.severity.value}`,
+            description:form.description.value, priority:form.severity.value,
+            admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('unsafe')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_report');
+        if (result.isOk) { showToast('Laporan kondisi tidak aman berhasil dikirim!'); form.reset(); initPhotoState('unsafe'); renderPhotoList('unsafe'); }
+        else showToast(t('toast_send_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: REQUEST APD
+    // ============================================================
+    function renderRequestAPD() {
+        initPhotoState('apd');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6"><h1 class="text-2xl font-bold text-gray-800">🦺 Request APD</h1><p class="text-gray-500">Form permintaan Alat Pelindung Diri</p></div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="apd-form" onsubmit="submitRequestAPD(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Jenis APD</label>
+                                <select name="apd_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">Pilih Jenis APD</option>
+                                    <option value="Helm Safety">Helm Safety</option>
+                                    <option value="Kacamata Safety">Kacamata Safety</option>
+                                    <option value="Masker">Masker</option>
+                                    <option value="Earplug/Earmuff">Earplug/Earmuff</option>
+                                    <option value="Sarung Tangan">Sarung Tangan</option>
+                                    <option value="Sepatu Safety">Sepatu Safety</option>
+                                    <option value="Rompi Safety">Rompi Safety</option>
+                                    <option value="Full Body Harness">Full Body Harness</option>
+                                    <option value="Respirator">Respirator</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                                <input type="number" name="quantity" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="1"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Ukuran</label>
+                                <select name="size" class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">Pilih Ukuran</option>
+                                    <option value="S">S</option><option value="M">M</option><option value="L">L</option>
+                                    <option value="XL">XL</option><option value="XXL">XXL</option><option value="Free Size">Free Size</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_department')}</option>${getDepartmentOptions()}</select></div>
+                        </div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Alasan Permintaan</label>
+                            <select name="reason" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                <option value="">Pilih Alasan</option>
+                                <option value="Baru - Belum Punya">Baru - Belum Punya</option>
+                                <option value="Penggantian - Rusak">Penggantian - Rusak</option>
+                                <option value="Penggantian - Hilang">Penggantian - Hilang</option>
+                                <option value="Penggantian - Tidak Layak">Penggantian - Tidak Layak Pakai</option>
+                            </select></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Keterangan Tambahan</label>
+                            <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        ${getPhotoUploadHTML('apd')}
+                        <button type="submit" id="apd-submit-btn" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold">${t('btn_submit_apd')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitRequestAPD(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('apd')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('apd-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_apd'); return; }
+        const data = {
+            type:'Request APD', category:form.apd_type.value, location:'-',
+            department:form.department.value, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:'Menunggu Konfirmasi', details:`Jumlah: ${form.quantity.value}, Ukuran: ${form.size.value||'-'}, Alasan: ${form.reason.value}`,
+            description:form.notes.value||'-', priority:'Normal', admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('apd')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_apd');
+        if (result.isOk) { showToast('Permintaan APD berhasil dikirim!'); form.reset(); initPhotoState('apd'); renderPhotoList('apd'); }
+        else showToast(t('toast_submit_failed'),'error');
+    }
+
+    // ============================================================
+    // FORM: SARAN LAINNYA
+    // ============================================================
+    function renderSaranLainnya() {
+        initPhotoState('saran');
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6"><h1 class="text-2xl font-bold text-gray-800">💬 Saran Lainnya</h1><p class="text-gray-500">Berikan saran dan ide untuk perbaikan K3</p></div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <form id="saran-form" onsubmit="submitSaranLainnya(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Kategori Saran</label>
+                                <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_category')}</option>
+                                    <option value="Perbaikan Prosedur K3">Perbaikan Prosedur K3</option>
+                                    <option value="Fasilitas K3">Fasilitas K3</option>
+                                    <option value="Pelatihan K3">Pelatihan K3</option>
+                                    <option value="Pengecekan Rutin">Pengecekan Rutin</option>
+                                    <option value="Perilaku Kerja Aman">Perilaku Kerja Aman</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                                <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                    <option value="">${t('option_select_department')}</option>${getDepartmentOptions()}</select></div>
+                        </div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Lokasi/Area (Opsional)</label>
+                            <input type="text" name="location" class="w-full px-4 py-2 border border-gray-200 rounded-lg"></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Judul Saran</label>
+                            <input type="text" name="title" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></div>
+                        <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Uraian Saran</label>
+                            <textarea name="suggestion" rows="5" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"></textarea></div>
+                        ${getPhotoUploadHTML('saran')}
+                        <button type="submit" id="saran-submit-btn" class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold">${t('btn_submit_suggestion')}</button>
+                    </form>
+                </div>
+            </div>`;
+    }
+
+    async function submitSaranLainnya(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (hasPhotosUploading('saran')) { showToast('Tunggu foto selesai diunggah...','info'); return; }
+        const btn = document.getElementById('saran-submit-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto"></div>';
+        if (allReports.length>=999) { showToast(t('toast_report_limit'),'error'); btn.disabled=false; btn.innerHTML=t('btn_submit_suggestion'); return; }
+        const data = {
+            type:'Saran Lainnya', category:form.category.value, location:form.location.value||'-',
+            department:form.department.value, reporter_name:currentUser.name, report_date:getReportDateTime(),
+            status:'Menunggu Konfirmasi', details:form.title.value, description:form.suggestion.value,
+            priority:'Rendah', admin_notes:'', completed_date:'',
+            photo_urls: getUploadedPhotoUrls('saran')
+        };
+        const result = await createReport(data);
+        btn.disabled=false; btn.innerHTML=t('btn_submit_suggestion');
+        if (result.isOk) { showToast('Saran berhasil dikirim!'); form.reset(); initPhotoState('saran'); renderPhotoList('saran'); }
+        else showToast(t('toast_submit_failed'),'error');
+    }
+
+    // ============================================================
+    // ADMIN: MANAGE REPORTS
+    // ============================================================
+    function renderManageReports() {
+        if (currentUser.role !== 'admin') { navigateTo('dashboard'); return; }
+        document.getElementById('content-area').innerHTML = `
+            <div class="fade-in">
+                <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div><h1 class="text-2xl font-bold text-gray-800">⚙️ Kelola Laporan</h1><p class="text-gray-500">Kelola dan proses semua laporan yang masuk</p></div>
+                    <div class="flex gap-2">
+                        <select id="filter-type" onchange="filterReports()" class="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm">
+                            <option value="">Semua Tipe</option>
+                            <option value="Inspeksi APAR">Inspeksi APAR</option>
+                            <option value="Inspeksi Hydrant">Inspeksi Hydrant</option>
+                            <option value="Inspeksi P3K">Inspeksi P3K</option>
+                            <option value="Inspeksi Peralatan">Inspeksi Peralatan</option>
+                            <option value="Permit Kerja">Permit Kerja</option>
+                            <option value="JSA">JSA</option>
+                            <option value="Kondisi Tidak Aman">Kondisi Tidak Aman</option>
+                            <option value="Request APD">Request APD</option>
+                        </select>
+                        <select id="filter-status" onchange="filterReports()" class="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm">
+                            <option value="">Semua Status</option>
+                            <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
+                            <option value="Diproses">Diproses</option>
+                            <option value="Selesai">Selesai</option>
+                            <option value="Perlu Perbaikan">Perlu Perbaikan</option>
+                            <option value="Perlu Isi Ulang">Perlu Isi Ulang</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipe</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pelapor</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dept</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-table-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="empty-state" class="hidden p-8 text-center text-gray-500"><p>Belum ada laporan</p></div>
+                </div>
+            </div>`;
+        filterReports();
+    }
+
+    function filterReports() {
+        const typeFilter = document.getElementById('filter-type')?.value||'';
+        const statusFilter = document.getElementById('filter-status')?.value||'';
+        let filtered = allReports;
+        if (typeFilter) filtered = filtered.filter(r => r.type===typeFilter);
+        if (statusFilter) filtered = filtered.filter(r => r.status===statusFilter);
+        const tbody = document.getElementById('reports-table-body');
+        const emptyState = document.getElementById('empty-state');
+        if (!tbody) return;
+        if (filtered.length===0) { tbody.innerHTML=''; emptyState?.classList.remove('hidden'); return; }
+        emptyState?.classList.add('hidden');
+        tbody.innerHTML = filtered.map(r => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-700">${formatDateTime(r.report_date)}</td>
+                <td class="px-4 py-3 text-sm text-gray-700">${r.type}</td>
+                <td class="px-4 py-3 text-sm text-gray-700">${r.category||'-'}</td>
+                <td class="px-4 py-3 text-sm text-gray-700">${r.reporter_name}</td>
+                <td class="px-4 py-3 text-sm text-gray-700">${r.department}</td>
+                <td class="px-4 py-3 text-sm">
+                    ${r.photo_urls?.length
+                        ? `<span class="text-blue-600 font-medium">📷 ${r.photo_urls.length}</span>`
+                        : `<span class="text-gray-400">-</span>`}
+                </td>
+                <td class="px-4 py-3"><span class="status-badge ${getStatusClass(r.status)}">${r.status}</span></td>
+                <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                        <button onclick="viewReport('${r.__backendId}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium hover:bg-blue-200">Detail</button>
+                        <button onclick="updateReportStatus('${r.__backendId}')" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium hover:bg-emerald-200">Update</button>
+                        <button onclick="confirmDeleteReport('${r.__backendId}')" class="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200">Hapus</button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    }
+
+    // ============================================================
+    // VIEW REPORT MODAL — dengan foto
+    // ============================================================
+    function viewReport(id) {
+        const report = allReports.find(r => r.__backendId===id);
+        if (!report) return;
+        const modal = document.getElementById('modal-container');
+        modal.innerHTML = `
+            <div class="modal-overlay fixed inset-0 flex items-center justify-center p-4" onclick="closeModal(event)">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto fade-in" onclick="event.stopPropagation()">
+                    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-gray-800">Detail Laporan</h2>
+                        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-full">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><p class="text-xs text-gray-500">Tipe</p><p class="font-medium">${report.type}</p></div>
+                            <div><p class="text-xs text-gray-500">Kategori</p><p class="font-medium">${report.category||'-'}</p></div>
+                            <div><p class="text-xs text-gray-500">Pelapor</p><p class="font-medium">${report.reporter_name}</p></div>
+                            <div><p class="text-xs text-gray-500">Departemen</p><p class="font-medium">${report.department}</p></div>
+                            <div><p class="text-xs text-gray-500">Lokasi</p><p class="font-medium">${report.location||'-'}</p></div>
+                            <div><p class="text-xs text-gray-500">Tanggal</p><p class="font-medium">${formatDateTime(report.report_date)}</p></div>
+                            <div><p class="text-xs text-gray-500">Prioritas</p><p class="font-medium">${report.priority||'Normal'}</p></div>
+                            <div><p class="text-xs text-gray-500">Status</p><span class="status-badge ${getStatusClass(report.status)}">${report.status}</span></div>
+                        </div>
+                        <div><p class="text-xs text-gray-500 mb-1">Detail</p><p class="text-sm bg-gray-50 p-3 rounded-lg">${report.details||'-'}</p></div>
+                        <div><p class="text-xs text-gray-500 mb-1">Deskripsi</p><p class="text-sm bg-gray-50 p-3 rounded-lg">${report.description||'-'}</p></div>
+                        ${report.admin_notes ? `<div><p class="text-xs text-gray-500 mb-1">Catatan Admin</p><p class="text-sm bg-blue-50 p-3 rounded-lg">${report.admin_notes}</p></div>` : ''}
+                        ${report.photo_urls?.length ? `
+                        <div>
+                            <p class="text-xs text-gray-500 mb-2">📷 Foto Dokumentasi (${report.photo_urls.length} foto)</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${report.photo_urls.map((url, i) => `
+                                    <a href="${url}" target="_blank" class="block">
+                                        <img src="${url}" alt="Foto ${i+1}"
+                                             class="w-24 h-24 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23f3f4f6%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 font-size=%2230%22>📷</text></svg>'">
+                                    </a>`).join('')}
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Klik foto untuk melihat ukuran penuh di Google Drive</p>
+                        </div>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        modal.classList.remove('hidden');
+    }
+
+    function updateReportStatus(id) {
+        const report = allReports.find(r => r.__backendId===id);
+        if (!report) return;
+        const modal = document.getElementById('modal-container');
+        modal.innerHTML = `
+            <div class="modal-overlay fixed inset-0 flex items-center justify-center p-4" onclick="closeModal(event)">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full fade-in" onclick="event.stopPropagation()">
+                    <div class="p-6 border-b border-gray-100">
+                        <h2 class="text-xl font-bold text-gray-800">Update Status</h2>
+                        <p class="text-sm text-gray-500">${report.type} - ${report.category||''}</p>
+                    </div>
+                    <form onsubmit="saveReportStatus(event, '${id}')" class="p-6 space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select name="status" required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                                <option value="Menunggu Konfirmasi" ${report.status==='Menunggu Konfirmasi'?'selected':''}>Menunggu Konfirmasi</option>
+                                <option value="Diproses" ${report.status==='Diproses'?'selected':''}>Diproses</option>
+                                <option value="Selesai" ${report.status==='Selesai'?'selected':''}>Selesai</option>
+                                <option value="Perlu Perbaikan" ${report.status==='Perlu Perbaikan'?'selected':''}>Perlu Perbaikan</option>
+                                <option value="Perlu Isi Ulang" ${report.status==='Perlu Isi Ulang'?'selected':''}>Perlu Isi Ulang</option>
+                            </select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Catatan Admin</label>
+                            <textarea name="admin_notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg" placeholder="Tambahkan catatan">${report.admin_notes||''}</textarea></div>
+                        <div class="flex gap-3">
+                            <button type="button" onclick="closeModal()" class="flex-1 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
+                            <button type="submit" id="update-status-btn" class="flex-1 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+        modal.classList.remove('hidden');
+    }
+
+    async function saveReportStatus(e, id) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('update-status-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto w-5 h-5"></div>';
+        const report = allReports.find(r => r.__backendId===id);
+        if (!report) return;
+        const updatedReport = { ...report, status:form.status.value, admin_notes:form.admin_notes.value,
+            completed_date:form.status.value==='Selesai'?new Date().toISOString().split('T')[0]:'' };
+        const result = await updateReport(updatedReport);
+        btn.disabled=false; btn.innerHTML='Simpan';
+        if (result.isOk) { showToast('Status berhasil diupdate!'); closeModal(); }
+        else showToast('Gagal mengupdate status','error');
+    }
+
+    let deleteConfirmId = null;
+
+    function confirmDeleteReport(id) {
+        deleteConfirmId = id;
+        const modal = document.getElementById('modal-container');
+        modal.innerHTML = `
+            <div class="modal-overlay fixed inset-0 flex items-center justify-center p-4" onclick="closeModal(event)">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full fade-in" onclick="event.stopPropagation()">
+                    <div class="p-6 text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Hapus Laporan?</h3>
+                        <p class="text-gray-500 mb-6">Tindakan ini tidak dapat dibatalkan.</p>
+                        <div class="flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
+                            <button onclick="executeDeleteReport()" id="delete-confirm-btn" class="flex-1 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Hapus</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        modal.classList.remove('hidden');
+    }
+
+    async function executeDeleteReport() {
+        if (!deleteConfirmId) return;
+        const btn = document.getElementById('delete-confirm-btn');
+        btn.disabled=true; btn.innerHTML='<div class="loader mx-auto w-5 h-5"></div>';
+        const report = allReports.find(r => r.__backendId===deleteConfirmId);
+        if (!report) return;
+        const result = await deleteReport(report);
+        btn.disabled=false; btn.innerHTML='Hapus';
+        if (result.isOk) { showToast('Laporan berhasil dihapus!'); closeModal(); deleteConfirmId=null; }
+        else showToast('Gagal menghapus laporan','error');
+    }
+
+    function closeModal(e) {
+        if (e && e.target!==e.currentTarget) return;
+        document.getElementById('modal-container').classList.add('hidden');
+    }
+
+    // ============================================================
+    // START APP
+    // ============================================================
+    initApp();
+    setLanguage('id');
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', openSidebar);
+  </script>
+ </body>
+</html>

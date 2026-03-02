@@ -4,12 +4,37 @@ const SHEET_NAME = 'SafeTrack Reports';
 const HEADER_ROW = 1;
 const SPREADSHEET_ID = '1sq5leW45LVQjUzmojpadHKpu1RYFXymAg7LEuRpJDFM';
 
+// ID folder Google Drive untuk menyimpan foto laporan
+// Buat folder baru di Drive, lalu ambil ID-nya dari URL
+// Contoh URL folder: https://drive.google.com/drive/folders/1ABC123xyz
+// ID-nya adalah bagian setelah /folders/
+const DRIVE_FOLDER_ID = 'ISI_DENGAN_ID_FOLDER_GOOGLE_DRIVE_ANDA';
+
 function getSpreadsheet() {
-  // Prioritaskan Spreadsheet ID agar web app konsisten lintas deployment
   if (SPREADSHEET_ID) {
     return SpreadsheetApp.openById(SPREADSHEET_ID);
   }
   return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function getDriveFolder() {
+  try {
+    if (DRIVE_FOLDER_ID && DRIVE_FOLDER_ID !== 'ISI_DENGAN_ID_FOLDER_GOOGLE_DRIVE_ANDA') {
+      return DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    }
+    // Fallback: cari atau buat folder bernama 'SafeTrack Photos'
+    const folders = DriveApp.getFoldersByName('SafeTrack Photos');
+    if (folders.hasNext()) {
+      return folders.next();
+    }
+    const newFolder = DriveApp.createFolder('SafeTrack Photos');
+    // Jadikan folder bisa diakses siapa saja dengan link
+    newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return newFolder;
+  } catch (e) {
+    Logger.log('Error getDriveFolder: ' + e.toString());
+    return DriveApp.getRootFolder();
+  }
 }
 
 // Inisialisasi sheet jika belum ada
@@ -35,33 +60,33 @@ function initializeSheet() {
       'Status Item P3K',
       'Catatan Admin',
       'Tanggal Selesai',
+      'URL Foto',
       'Timestamp Sinkronisasi'
     ];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     
-    // Format header
     const headerRange = sheet.getRange(1, 1, 1, headers.length);
     headerRange.setBackground('#1e40af')
               .setFontColor('#ffffff')
               .setFontWeight('bold');
     
-    // Set column widths
-    sheet.setColumnWidth(1, 120);  // ID Backend
-    sheet.setColumnWidth(2, 100);  // Tanggal
-    sheet.setColumnWidth(3, 130);  // Tipe
-    sheet.setColumnWidth(4, 120);  // Kategori
-    sheet.setColumnWidth(5, 100);  // Pelapor
-    sheet.setColumnWidth(6, 120);  // Departemen
-    sheet.setColumnWidth(7, 150);  // Lokasi
-    sheet.setColumnWidth(8, 140);  // Status
-    sheet.setColumnWidth(9, 100);  // Prioritas
-    sheet.setColumnWidth(10, 150); // Detail
-    sheet.setColumnWidth(11, 200); // Deskripsi
-    sheet.setColumnWidth(12, 130); // Tipe Box P3K
-    sheet.setColumnWidth(13, 200); // Status Item P3K
-    sheet.setColumnWidth(14, 200); // Catatan Admin
-    sheet.setColumnWidth(15, 120); // Tanggal Selesai
-    sheet.setColumnWidth(16, 150); // Timestamp
+    sheet.setColumnWidth(1, 120);
+    sheet.setColumnWidth(2, 100);
+    sheet.setColumnWidth(3, 130);
+    sheet.setColumnWidth(4, 120);
+    sheet.setColumnWidth(5, 100);
+    sheet.setColumnWidth(6, 120);
+    sheet.setColumnWidth(7, 150);
+    sheet.setColumnWidth(8, 140);
+    sheet.setColumnWidth(9, 100);
+    sheet.setColumnWidth(10, 150);
+    sheet.setColumnWidth(11, 200);
+    sheet.setColumnWidth(12, 130);
+    sheet.setColumnWidth(13, 200);
+    sheet.setColumnWidth(14, 200);
+    sheet.setColumnWidth(15, 120);
+    sheet.setColumnWidth(16, 250); // URL Foto
+    sheet.setColumnWidth(17, 150); // Timestamp
   }
   
   return sheet;
@@ -73,19 +98,74 @@ function createApiOutput(payload, callback) {
       .createTextOutput(`${callback}(${JSON.stringify(payload)})`)
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
-
   return ContentService
     .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Main handler untuk POST request dari Canva
+// ===== UPLOAD FOTO KE GOOGLE DRIVE =====
+function uploadPhotoToDrive(base64Data, fileName, mimeType) {
+  try {
+    // Hapus prefix data URL jika ada (contoh: "data:image/jpeg;base64,")
+    const base64Clean = base64Data.replace(/^data:[^;]+;base64,/, '');
+    
+    // Decode base64 ke bytes
+    const bytes = Utilities.base64Decode(base64Clean);
+    const blob = Utilities.newBlob(bytes, mimeType || 'image/jpeg', fileName);
+    
+    // Upload ke folder Drive
+    const folder = getDriveFolder();
+    const file = folder.createFile(blob);
+    
+    // Set permission: siapa saja dengan link bisa lihat
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // Return URL langsung (untuk tampil di browser)
+    const fileId = file.getId();
+    return {
+      success: true,
+      fileId: fileId,
+      viewUrl: `https://drive.google.com/file/d/${fileId}/view`,
+      directUrl: `https://drive.google.com/uc?export=view&id=${fileId}`
+    };
+  } catch (error) {
+    Logger.log('Error uploadPhotoToDrive: ' + error.toString());
+    return { success: false, error: error.toString() };
+  }
+}
+
+// Main handler untuk POST request
 function doPost(e) {
   try {
     const sheet = initializeSheet();
     const rawBody = e && e.postData && e.postData.contents ? e.postData.contents : '{}';
     const data = JSON.parse(rawBody);
 
+    // ===== ACTION: Upload Foto =====
+    if (data.action === 'uploadPhoto') {
+      if (!data.base64 || !data.fileName) {
+        return createApiOutput({ status: 'error', message: 'Data foto tidak lengkap' });
+      }
+      
+      const result = uploadPhotoToDrive(
+        data.base64,
+        data.fileName,
+        data.mimeType || 'image/jpeg'
+      );
+      
+      if (result.success) {
+        return createApiOutput({
+          status: 'success',
+          fileId: result.fileId,
+          viewUrl: result.viewUrl,
+          directUrl: result.directUrl
+        });
+      } else {
+        return createApiOutput({ status: 'error', message: result.error });
+      }
+    }
+
+    // ===== ACTION: Delete Report =====
     if (data.action === 'deleteReport' && data.backendId) {
       const deleted = deleteReportById(sheet, data.backendId);
       return createApiOutput({
@@ -94,10 +174,9 @@ function doPost(e) {
       });
     }
     
+    // ===== ACTION: Sync All Reports =====
     if (data.action === 'syncAll' && data.reports && Array.isArray(data.reports)) {
-      // Sinkronisasi seluruh laporan
       syncAllReports(sheet, data.reports);
-      
       return createApiOutput({ status: 'success', message: `${data.reports.length} laporan tersinkronisasi` });
     }
     
@@ -109,44 +188,33 @@ function doPost(e) {
   }
 }
 
-
 function formatServerDateTime(value) {
   if (!value) {
     return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   }
-
   const parsed = new Date(value);
   if (isNaN(parsed.getTime())) {
     return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
   }
-
   return Utilities.formatDate(parsed, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
 }
 
-// Sinkronisasi semua laporan
 function syncAllReports(sheet, reports) {
   if (!reports || reports.length === 0) return;
   
-  // Ambil semua data yang sudah ada
   const existingData = sheet.getDataRange().getValues();
-  const existingIds = new Set(existingData.slice(1).map(row => row[0])); // Kolom ID Backend
-  
-  // Pisahkan laporan baru dan update
   const newReports = [];
   const updateIndices = [];
   
   reports.forEach(report => {
     const rowIndex = existingData.findIndex(row => row[0] === report.backendId);
     if (rowIndex === -1) {
-      // Laporan baru
       newReports.push(report);
     } else {
-      // Laporan update (existing)
-      updateIndices.push({ report, rowIndex: rowIndex + 1 }); // +1 karena Google Sheets 1-indexed
+      updateIndices.push({ report, rowIndex: rowIndex + 1 });
     }
   });
   
-  // Tambah laporan baru
   if (newReports.length > 0) {
     const newRows = newReports.map(r => [
       r.backendId,
@@ -164,13 +232,12 @@ function syncAllReports(sheet, reports) {
       r.itemsStatus,
       r.adminNotes,
       r.completedDate,
+      Array.isArray(r.photoUrls) ? r.photoUrls.join('\n') : (r.photoUrls || ''),
       new Date().toLocaleString('id-ID')
     ]);
-    
-    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, 16).setValues(newRows);
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, 17).setValues(newRows);
   }
   
-  // Update laporan yang sudah ada
   updateIndices.forEach(({ report, rowIndex }) => {
     const values = [
       report.backendId,
@@ -188,33 +255,29 @@ function syncAllReports(sheet, reports) {
       report.itemsStatus,
       report.adminNotes,
       report.completedDate,
+      Array.isArray(report.photoUrls) ? report.photoUrls.join('\n') : (report.photoUrls || ''),
       new Date().toLocaleString('id-ID')
     ];
-    
-    sheet.getRange(rowIndex, 1, 1, 16).setValues([values]);
+    sheet.getRange(rowIndex, 1, 1, 17).setValues([values]);
   });
   
-  // Hapus duplikat terakhir
   removeDuplicates(sheet);
 }
 
-// Hapus duplikat berdasarkan ID Backend
 function removeDuplicates(sheet) {
   const data = sheet.getDataRange().getValues();
   const seen = new Set();
   const rowsToDelete = [];
   
-  // Iterasi dari bawah ke atas agar index tetap valid saat delete
   for (let i = data.length - 1; i > 0; i--) {
     const id = data[i][0];
     if (seen.has(id)) {
-      rowsToDelete.push(i + 1); // +1 karena Google Sheets 1-indexed
+      rowsToDelete.push(i + 1);
     } else {
       seen.add(id);
     }
   }
   
-  // Delete rows dari yang tertinggi ke terendah
   rowsToDelete.forEach(row => {
     sheet.deleteRow(row);
   });
@@ -222,23 +285,21 @@ function removeDuplicates(sheet) {
 
 function deleteReportById(sheet, backendId) {
   const data = sheet.getDataRange().getValues();
-
   for (let i = data.length - 1; i > 0; i--) {
     if (data[i][0] === backendId) {
-      sheet.deleteRow(i + 1); // +1 karena Google Sheets 1-indexed
+      sheet.deleteRow(i + 1);
       return true;
     }
   }
-
   return false;
 }
+
 function doGet(e) {
   try {
     const sheet = initializeSheet();
     const action = e && e.parameter && e.parameter.action ? e.parameter.action : "summary";
     const callback = e && e.parameter && e.parameter.callback ? e.parameter.callback : "";
 
-    // action=getReports -> kirim semua data laporan agar bisa sinkron lintas device
     if (action === "getReports") {
       const data = sheet.getDataRange().getValues();
       const reports = data.slice(1).map(row => ({
@@ -257,13 +318,13 @@ function doGet(e) {
         items_status: row[12] || "",
         admin_notes: row[13] || "",
         completed_date: row[14] || "",
-        synced_at: row[15] || ""
+        photo_urls: row[15] ? String(row[15]).split('\n').filter(Boolean) : [],
+        synced_at: row[16] || ""
       }));
 
       return createApiOutput({ status: "success", reports, total: reports.length }, callback);
     }
 
-    // default: ringkasan total
     const total = Math.max(sheet.getLastRow() - HEADER_ROW, 0);
     return createApiOutput({ status: "success", total }, callback);
   } catch (error) {
@@ -272,7 +333,16 @@ function doGet(e) {
     return createApiOutput({ status: "error", message: error.toString() }, callback);
   }
 }
-// Fungsi untuk test (jalankan dari Editor)
+
+// Test fungsi upload
+function testUpload() {
+  // Test membuat folder dan upload file kecil
+  const folder = getDriveFolder();
+  Logger.log('Folder name: ' + folder.getName());
+  Logger.log('Folder ID: ' + folder.getId());
+  Logger.log('Test berhasil!');
+}
+
 function testSync() {
   const sheet = initializeSheet();
   const testData = {
@@ -293,11 +363,11 @@ function testSync() {
         boxType: '',
         itemsStatus: '',
         adminNotes: '',
-        completedDate: '2024-01-15'
+        completedDate: '2024-01-15',
+        photoUrls: []
       }
     ]
   };
-  
   syncAllReports(sheet, testData.reports);
   Logger.log('Test sync berhasil!');
 }
