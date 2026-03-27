@@ -152,6 +152,7 @@
         let currentUser = { name: '', department: '', role: 'employee' };
         let allReports = [];
         let currentPage = 'dashboard';
+        const menuTemplateCache = {};
 
    
         let currentLanguage = 'id';
@@ -850,6 +851,38 @@
             }, 100);
         }
 
+        async function loadMenuPageTemplate(templateName, context = {}) {
+            try {
+                if (!menuTemplateCache[templateName]) {
+                    const response = await fetch(`pages/${templateName}.html`);
+                    if (!response.ok) throw new Error(`Template ${templateName} not found`);
+                    menuTemplateCache[templateName] = await response.text();
+                }
+
+                const scope = {
+                    ...context,
+                    t,
+                    currentLanguage,
+                    currentUser,
+                    allReports,
+                    getTypeColor,
+                    getTypeIcon,
+                    getStatusClass,
+                    formatDateTime,
+                    getDepartmentOptions
+                };
+
+                return new Function('scope', 'with(scope){ return `' + menuTemplateCache[templateName] + '`; }')(scope);
+            } catch (error) {
+                console.error(`Failed to load template: ${templateName}`, error);
+                return `
+                    <div class="bg-white rounded-xl p-6 border border-red-200 text-red-700">
+                        Gagal memuat halaman menu.
+                    </div>
+                `;
+            }
+        }
+
         // Toast Notification
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -867,7 +900,7 @@
         }
 
         // Dashboard
-        function renderDashboard() {
+        async function renderDashboard() {
             const visibleReports = allReports;
             
             const waiting = visibleReports.filter(r => r.status === 'Menunggu Konfirmasi').length;
@@ -895,189 +928,7 @@
             });
 
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Welcome' : 'Selamat datang'}, ${currentUser.name}! ${currentUser.role === 'admin' ? '(Administrator)' : ''}</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Waiting for Confirmation' : 'Menunggu Konfirmasi'}</p>
-                                    <p class="text-3xl font-bold text-amber-500">${waiting}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Processing' : 'Sedang Diproses'}</p>
-                                    <p class="text-3xl font-bold text-blue-500">${processing}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Completed' : 'Selesai'}</p>
-                                    <p class="text-3xl font-bold text-emerald-500">${completed}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-gray-500 text-sm">${currentLanguage === 'en' ? 'Needs Attention' : 'Perlu Perhatian'}</p>
-                                    <p class="text-3xl font-bold text-red-500">${needsAttention}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Statistics -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-6 shadow-sm text-white">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-emerald-100 text-sm">${currentLanguage === 'en' ? 'Total Reports' : 'Total Laporan'}</p>
-                                    <p class="text-3xl font-bold">${totalReports}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl p-6 shadow-sm text-white">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-purple-100 text-sm">${currentLanguage === 'en' ? 'Completion Rate' : 'Tingkat Penyelesaian'}</p>
-                                    <p class="text-3xl font-bold">${completionRate}%</p>
-                                    <p class="text-xs text-purple-100 mt-1">${completed} ${currentLanguage === 'en' ? 'from' : 'dari'} ${totalReports}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gradient-to-br from-red-500 to-orange-600 rounded-xl p-6 shadow-sm text-white">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-red-100 text-sm">${currentLanguage === 'en' ? 'High Priority' : 'Prioritas Tinggi'}</p>
-                                    <p class="text-3xl font-bold">${highPriority}</p>
-                                    <p class="text-xs text-red-100 mt-1">${currentLanguage === 'en' ? 'need for treatment' : 'memerlukan penanganan'}</p>
-                                </div>
-                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${needsAttention > 0 ? `
-                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                        <h3 class="font-semibold text-red-800 mb-3 flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            Item yang Membutuhkan Perhatian
-                        </h3>
-                        <div class="space-y-2">
-                            ${visibleReports.filter(r => r.status === 'Perlu Perbaikan' || r.status === 'Perlu Isi Ulang' || r.status === 'Tidak Layak Pakai').slice(0, 5).map(r => `
-                                <div class="bg-white rounded-lg p-3 flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium text-gray-800">${r.category || r.type}</p>
-                                        <p class="text-sm text-gray-500">${r.location || r.department} - ${formatDateTime(r.report_date)}</p>
-                                    </div>
-                                    <span class="status-badge status-needs-attention">${r.status}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Statistics Charts -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <!-- Laporan per Tipe -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4">${currentLanguage === 'en' ? '📊 Report by Type' : '📊 Laporan per Tipe'}</h3>
-                            <div class="space-y-3">
-                                ${Object.entries(typeStats).sort((a, b) => b[1] - a[1]).map(([type, count]) => `
-                                    <div>
-                                        <div class="flex justify-between mb-1">
-                                            <span class="text-sm font-medium text-gray-700">${type}</span>
-                                            <span class="text-sm font-bold text-emerald-600">${count}</span>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="bg-emerald-500 h-2 rounded-full" style="width: ${totalReports > 0 ? (count / totalReports * 100) : 0}%"></div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                                ${Object.keys(typeStats).length === 0 ? '<p class="text-gray-500 text-sm">Belum ada data</p>' : ''}
-                            </div>
-                        </div>
-
-                        <!-- Laporan per Departemen (Admin Only) -->
-                        ${currentUser.role === 'admin' ? `
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="font-semibold text-gray-800 mb-4">🏢 Laporan per Departemen</h3>
-                            <div class="space-y-3">
-                                ${Object.entries(deptStats).sort((a, b) => b[1] - a[1]).map(([dept, count]) => `
-                                    <div>
-                                        <div class="flex justify-between mb-1">
-                                            <span class="text-sm font-medium text-gray-700">${dept}</span>
-                                            <span class="text-sm font-bold text-blue-600">${count}</span>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="bg-blue-500 h-2 rounded-full" style="width: ${allReports.length > 0 ? (count / allReports.length * 100) : 0}%"></div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div class="p-4 border-b border-gray-100">
-                            <h3 class="font-semibold text-gray-800">Laporan Terbaru</h3>
-                        </div>
-                        <div class="divide-y divide-gray-100">
-                            ${visibleReports.length === 0 ? `
-                                <div class="p-8 text-center text-gray-500">
-                                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <p>Belum ada laporan</p>
-                                </div>
-                            ` : visibleReports.slice(0, 10).map(r => `
-                                <button type="button" onclick="viewReport('${r.__backendId}')" class="w-full text-left p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-full ${getTypeColor(r.type)} flex items-center justify-center text-white font-bold">
-                                            ${getTypeIcon(r.type)}
-                                        </div>
-                                        <div>
-                                            <p class="font-medium text-gray-800">${r.type} - ${r.category || ''}</p>
-                                            <p class="text-sm text-gray-500">${r.location || r.department} • ${formatDateTime(r.report_date)}</p>
-                                        </div>
-                                    </div>
-                                    <span class="status-badge ${getStatusClass(r.status)}">${r.status}</span>
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('dashboard', { waiting, processing, completed, needsAttention, highPriority, totalReports, completionRate, deptStats, typeStats, visibleReports });
         }
 
         function getTypeColor(type) {
@@ -1113,71 +964,9 @@
         }
 
         // Inspeksi APAR
-        function renderInspeksiAPAR() {
+        async function renderInspeksiAPAR() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🧯 Fire Extinguisher Inspection' : '🧯 Inspeksi APAR'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Fire Extinguisher inspection form' : 'Form inspeksi Alat Pemadam Api Ringan'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="apar-form" onsubmit="submitInspeksiAPAR(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Fire Extinguisher Location' : 'Lokasi APAR'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Building A Floor 2' : 'Contoh: Gedung A Lt. 2'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Fire Extinguisher Number' : 'Nomor APAR'}</label>
-                                    <input type="text" name="apar_number" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: APAR-001' : 'Contoh: APAR-001'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Fire Extinguisher Type' : 'Jenis APAR'}</label>
-                                    <select name="apar_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_type')}</option>
-                                        <option value="Powder">Powder</option>
-                                        <option value="CO2">CO2</option>
-                                        <option value="Foam">Foam</option>
-                                        <option value="Air">Air</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Expiry Date' : 'Tanggal Kadaluarsa'}</label>
-                                    <input type="date" name="expiry_date" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'Inspection Checklist' : 'Checklist Inspeksi'}</label>
-                                <div class="space-y-2 bg-gray-50 rounded-lg p-4">
-                                    ${(currentLanguage === 'en' ? ['Seal is in good condition', 'Safety pin is installed', 'Pressure is normal (needle in green zone)', 'Hose is in good condition', 'Nozzle is not clogged', 'Instruction label is readable', 'Position is easily accessible'] : ['Segel dalam kondisi baik', 'Pin pengaman terpasang', 'Tekanan dalam kondisi baik (jarum di area hijau)', 'Selang dalam kondisi baik', 'Nozzle tidak tersumbat', 'Label petunjuk terbaca jelas', 'Posisi mudah dijangkau']).map((item, i) => `
-                                        <label class="flex items-center gap-3 cursor-pointer">
-                                            <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500">
-                                            <span class="text-gray-700">${item}</span>
-                                        </label>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
-                                <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">${t('option_select_condition')}</option>
-                                    <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
-                                    <option value="Perlu Perbaikan">${currentLanguage === 'en' ? 'Needs to be Repaired' : 'Perlu Perbaikan'}</option>
-                                    <option value="Tidak Layak Pakai">${currentLanguage === 'en' ? 'Unusable' : 'Tidak Layak Pakai'}</option>
-                                </select>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Notes' : 'Catatan'}</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add notes if needed' : 'Tambahkan catatan jika diperlukan'}"></textarea>
-                            </div>
-                            <button type="submit" id="apar-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                ${t('btn_submit_inspection')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('inspeksi-apar', {});
         }
 
         async function submitInspeksiAPAR(e) {
@@ -1222,65 +1011,9 @@
         }
 
         // Inspeksi Hydrant
-        function renderInspeksiHydrant() {
+        async function renderInspeksiHydrant() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🚒 Hydrant Inspection' : '🚒 Inspeksi Hydrant'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Hydrant and hydrant box inspection form' : 'Form inspeksi Hydrant dan Box Hydrant'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="hydrant-form" onsubmit="submitInspeksiHydrant(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Hydrant Location' : 'Lokasi Hydrant'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: North Parking Area' : 'Contoh: Area Parkir Utara'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Hydrant Number/ID' : 'Nomor/ID Hydrant'}</label>
-                                    <input type="text" name="hydrant_id" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: HYD-001">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Hydrant Type' : 'Jenis Hydrant'}</label>
-                                    <select name="hydrant_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_type')}</option>
-                                        <option value="Indoor">Indoor (Box Hydrant)</option>
-                                        <option value="Outdoor">Outdoor (Pillar Hydrant)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'Inspection Checklist' : 'Checklist Inspeksi'}</label>
-                                <div class="space-y-2 bg-gray-50 rounded-lg p-4">
-                                    ${(currentLanguage === 'en' ? ['Hydrant box is not damaged/rusted', 'Hose is in good condition', 'Nozzle functions properly', 'Valve is easy to open/close', 'Water pressure is sufficient', 'Surrounding area is unobstructed', 'Usage instructions are available'] : ['Box hydrant tidak rusak/berkarat', 'Selang dalam kondisi baik', 'Nozzle berfungsi dengan baik', 'Valve mudah dibuka/ditutup', 'Tekanan air mencukupi', 'Area sekitar bebas hambatan', 'Petunjuk penggunaan terpasang']).map((item, i) => `
-                                        <label class="flex items-center gap-3 cursor-pointer">
-                                            <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500">
-                                            <span class="text-gray-700">${item}</span>
-                                        </label>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
-                                <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">${t('option_select_condition')}</option>
-                                    <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
-                                    <option value="Perlu Perbaikan">${currentLanguage === 'en' ? 'Needs to be Repaired' : 'Perlu Perbaikan'}</option>
-                                    <option value="Tidak Layak Pakai">${currentLanguage === 'en' ? 'Unusable' : 'Tidak Layak Pakai'}</option>
-                                </select>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Notes' : 'Catatan'}</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add notes if needed' : 'Tambahkan catatan jika diperlukan'}"></textarea>
-                            </div>
-                            <button type="submit" id="hydrant-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                ${t('btn_submit_inspection')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('inspeksi-hydrant', {});
         }
 
         async function submitInspeksiHydrant(e) {
@@ -1325,57 +1058,9 @@
         }
 
         // Inspeksi P3K
-        function renderInspeksiP3K() {
+        async function renderInspeksiP3K() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🩹 First Aid Box Inspection' : '🩹 Inspeksi P3K'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'First aid box inspection form based on Ministerial Regulation No. 15/2008' : 'Form inspeksi Kotak P3K sesuai Permenaker No. 15 Tahun 2008'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="p3k-form" onsubmit="submitInspeksiP3K(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'First Aid Box Location' : 'Lokasi Kotak P3K'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Production Room A' : 'Contoh: Ruang Produksi A'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'First Aid Box Type' : 'Tipe Kotak P3K'}</label>
-                                    <select name="box_type" required onchange="updateP3KChecklist(this.value)" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_box_type')}</option>
-                                        <option value="A">${currentLanguage === 'en' ? 'Type A (1-25 workers)' : 'Tipe A (Tenaga Kerja 1-25 orang)'}</option>
-                                        <option value="B">${currentLanguage === 'en' ? 'Type B (26-50 workers)' : 'Tipe B (Tenaga Kerja 26-50 orang)'}</option>
-                                        <option value="C">${currentLanguage === 'en' ? 'Type C (51-100 workers)' : 'Tipe C (Tenaga Kerja 51-100 orang)'}</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="p3k-checklist" class="mb-4 hidden">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'First Aid Box Checklist' : 'Checklist Isi Kotak P3K'}</label>
-                                <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                                    <table class="w-full text-sm">
-                                        <thead>
-                                            <tr class="border-b border-gray-200">
-                                                <th class="text-left py-2 font-medium text-gray-700">${currentLanguage === 'en' ? 'Item' : 'Isi Kotak'}</th>
-                                                <th class="text-center py-2 font-medium text-gray-700 w-20">${currentLanguage === 'en' ? 'Qty' : 'Jumlah'}</th>
-                                                <th class="text-center py-2 font-medium text-gray-700 w-32">${currentLanguage === 'en' ? 'Condition' : 'Kondisi'}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="p3k-items-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Additional Notes' : 'Catatan Tambahan'}</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add notes if needed' : 'Tambahkan catatan jika diperlukan'}"></textarea>
-                            </div>
-                            <button type="submit" id="p3k-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                ${t('btn_submit_inspection')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('inspeksi-p3k', {});
         }
 
         function updateP3KChecklist(boxType) {
@@ -1459,68 +1144,9 @@
         }
 
         // Inspeksi Peralatan Kerja
-        function renderInspeksiPeralatan() {
+        async function renderInspeksiPeralatan() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🔧 Work Equipment Inspection' : '🔧 Inspeksi Peralatan Kerja'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Inspection form for tools and machinery' : 'Form inspeksi peralatan dan mesin kerja'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="peralatan-form" onsubmit="submitInspeksiPeralatan(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Equipment Name' : 'Nama Peralatan'}</label>
-                                    <input type="text" name="equipment_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Forklift, Production Machine' : 'Contoh: Forklift, Mesin Produksi'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Asset ID/Number' : 'ID/Nomor Asset'}</label>
-                                    <input type="text" name="asset_id" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: AST-001">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
-                                    <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_department')}</option>
-                                        ${getDepartmentOptions()}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Location' : 'Lokasi'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Warehouse B' : 'Contoh: Gudang B'}">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">${currentLanguage === 'en' ? 'Inspection Checklist' : 'Checklist Inspeksi'}</label>
-                                <div class="space-y-2 bg-gray-50 rounded-lg p-4">
-                                    ${(currentLanguage === 'en' ? ['Physical condition is good (no damage)', 'Operational function is normal', 'Safety systems are functioning', 'Warning labels are installed', 'Last maintenance is on schedule', 'Documents/certifications are complete'] : ['Kondisi fisik baik (tidak ada kerusakan)', 'Fungsi operasional normal', 'Sistem keamanan berfungsi', 'Label peringatan terpasang', 'Maintenance terakhir sesuai jadwal', 'Dokumen/sertifikasi lengkap']).map((item, i) => `
-                                        <label class="flex items-center gap-3 cursor-pointer">
-                                            <input type="checkbox" name="check_${i}" class="w-5 h-5 rounded text-emerald-500 focus:ring-emerald-500">
-                                            <span class="text-gray-700">${item}</span>
-                                        </label>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Overall Condition' : 'Kondisi Keseluruhan'}</label>
-                                <select name="overall_condition" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">${t('option_select_condition')}</option>
-                                    <option value="Baik">${currentLanguage === 'en' ? 'Good' : 'Baik'}</option>
-                                    <option value="Perlu Perbaikan">${currentLanguage === 'en' ? 'Needs to be Repaired' : 'Perlu Perbaikan'}</option>
-                                    <option value="Tidak Layak Pakai">${currentLanguage === 'en' ? 'Unusable' : 'Tidak Layak Pakai'}</option>
-                                </select>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Notes/Findings' : 'Catatan/Temuan'}</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe findings or problems identified' : 'Jelaskan temuan atau masalah yang ditemukan'}"></textarea>
-                            </div>
-                            <button type="submit" id="peralatan-submit-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all">
-                                ${t('btn_submit_inspection')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('inspeksi-peralatan', {});
         }
 
         async function submitInspeksiPeralatan(e) {
@@ -1565,72 +1191,9 @@
         }
 
         // Permit Kerja
-        function renderPermitKerja() {
+        async function renderPermitKerja() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '📋 Work Permit' : '📋 Permit Kerja'}</h1>
-                        <p class="text-gray-500">Form pengajuan izin kerja berbahaya</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="permit-form" onsubmit="submitPermitKerja(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Type' : 'Jenis Pekerjaan'}</label>
-                                    <select name="work_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_type')}</option>
-                                        <option value="Pekerjaan Panas">Pekerjaan Panas (Hot Work)</option>
-                                        <option value="Bekerja di Ketinggian">Bekerja di Ketinggian (Working at Height)</option>
-                                        <option value="Ruang Terbatas">Ruang Terbatas (Confined Space)</option>
-                                        <option value="Pekerjaan Listrik">Pekerjaan Listrik (Electrical Work)</option>
-                                        <option value="Penggalian">Penggalian (Excavation)</option>
-                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
-                                    <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_department')}</option>
-                                        ${getDepartmentOptions()}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Location' : 'Lokasi Pekerjaan'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Boiler Area' : 'Contoh: Area Boiler'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Date' : 'Tanggal Pelaksanaan'}</label>
-                                    <input type="date" name="work_date" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Start Time' : 'Waktu Mulai'}</label>
-                                    <input type="time" name="start_time" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'End Time' : 'Waktu Selesai'}</label>
-                                    <input type="time" name="end_time" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Work Description' : 'Uraian Pekerjaan'}</label>
-                                <textarea name="work_description" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe detailed work to be performed' : 'Jelaskan detail pekerjaan yang akan dilakukan'}"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Workers Involved' : 'Nama Pekerja yang Terlibat'}</label>
-                                <textarea name="workers" rows="2" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Comma separated, example: John, Sarah, Mike' : 'Pisahkan dengan koma, contoh: Budi, Andi, Sari'}"></textarea>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Required PPE' : 'APD yang Diperlukan'}</label>
-                                <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Helmet, Gloves, Safety glasses' : 'Contoh: Helm, Sarung tangan, Kacamata safety'}"></textarea>
-                            </div>
-                            <button type="submit" id="permit-submit-btn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all">
-                                ${t('btn_submit_permit')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('permit-kerja', {});
         }
 
         async function submitPermitKerja(e) {
@@ -1675,56 +1238,9 @@
         }
 
         // JSA
-        function renderJSA() {
+        async function renderJSA() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">⚠️ Job Safety Analysis (JSA)</h1>
-                        <p class="text-gray-500">Form pengajuan analisis keselamatan kerja</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="jsa-form" onsubmit="submitJSA(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pekerjaan</label>
-                                    <input type="text" name="job_name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Perbaikan Mesin Produksi">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
-                                    <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_department')}</option>
-                                        ${getDepartmentOptions()}
-                                    </select>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Location' : 'Lokasi'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Area Produksi Line 1">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Job Steps' : 'Langkah-langkah Pekerjaan'}</label>
-                                <textarea name="job_steps" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe job steps in sequence' : 'Uraikan langkah-langkah pekerjaan secara berurutan'}"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Potential Hazards' : 'Potensi Bahaya'}</label>
-                                <textarea name="hazards" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Identify hazards for each step' : 'Identifikasi potensi bahaya dari setiap langkah'}"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Preventive Controls' : 'Tindakan Pencegahan'}</label>
-                                <textarea name="controls" rows="3" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe preventive controls for each hazard' : 'Jelaskan tindakan pencegahan untuk setiap bahaya'}"></textarea>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Required PPE' : 'APD yang Diperlukan'}</label>
-                                <textarea name="required_ppe" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Helmet, Gloves, Safety glasses' : 'Contoh: Helm, Sarung tangan, Safety glasses'}"></textarea>
-                            </div>
-                            <button type="submit" id="jsa-submit-btn" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all">
-                                ${t('btn_submit_jsa')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('jsa', {});
         }
 
         async function submitJSA(e) {
@@ -1769,67 +1285,9 @@
         }
 
         // Kondisi Tidak Aman
-        function renderKondisiTidakAman() {
+        async function renderKondisiTidakAman() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🚨 Unsafe Condition Report' : '🚨 Laporan Kondisi Tidak Aman'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Report any hazardous condition you find' : 'Laporkan kondisi berbahaya yang Anda temukan'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="unsafe-form" onsubmit="submitKondisiTidakAman(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                                    <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_category')}</option>
-                                        <option value="Lantai Licin">${currentLanguage === 'en' ? 'Slippery/Wet Floor' : 'Lantai Licin/Basah'}</option>
-                                        <option value="Instalasi Listrik">${currentLanguage === 'en' ? 'Hazardous Electrical Installation' : 'Instalasi Listrik Berbahaya'}</option>
-                                        <option value="Kebocoran">${currentLanguage === 'en' ? 'Leakage (Gas/Liquid)' : 'Kebocoran (Gas/Cairan)'}</option>
-                                        <option value="Peralatan Rusak">${currentLanguage === 'en' ? 'Damaged Equipment' : 'Peralatan Rusak'}</option>
-                                        <option value="Pencahayaan">${currentLanguage === 'en' ? 'Insufficient Lighting' : 'Pencahayaan Kurang'}</option>
-                                        <option value="Tumpahan Bahan Kimia">${currentLanguage === 'en' ? 'Chemical Spill' : 'Tumpahan Bahan Kimia'}</option>
-                                        <option value="Akses Darurat">${currentLanguage === 'en' ? 'Emergency Access Blocked' : 'Akses Darurat Terhalang'}</option>
-                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Risk Level' : 'Tingkat Bahaya'}</label>
-                                    <select name="severity" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_level')}</option>
-                                        <option value="Rendah">${currentLanguage === 'en' ? 'Low - Minor injury potential' : 'Rendah - Potensi cedera ringan'}</option>
-                                        <option value="Sedang">${currentLanguage === 'en' ? 'Medium - Serious injury potential' : 'Sedang - Potensi cedera serius'}</option>
-                                        <option value="Tinggi">${currentLanguage === 'en' ? 'High - Fatal/critical potential' : 'Tinggi - Potensi fatal/kritis'}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
-                                    <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_department')}</option>
-                                        ${getDepartmentOptions()}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Specific Location' : 'Lokasi Spesifik'}</label>
-                                    <input type="text" name="location" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: 2nd floor near restroom' : 'Contoh: Lantai 2 dekat toilet'}">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Condition Description' : 'Deskripsi Kondisi'}</label>
-                                <textarea name="description" rows="4" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe the unsafe condition in detail' : 'Jelaskan kondisi tidak aman yang Anda temukan secara detail'}"></textarea>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggested Improvement' : 'Saran Perbaikan'}</label>
-                                <textarea name="suggestion" rows="2" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Provide improvement suggestion (optional)' : 'Berikan saran untuk memperbaiki kondisi ini (opsional)'}"></textarea>
-                            </div>
-                            <button type="submit" id="unsafe-submit-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all">
-                                ${t('btn_submit_report')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('kondisi-tidak-aman', {});
         }
 
         async function submitKondisiTidakAman(e) {
@@ -1874,78 +1332,9 @@
         }
 
         // Request APD
-        function renderRequestAPD() {
+        async function renderRequestAPD() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '🦺 PPE Request' : '🦺 Request APD'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Personal Protective Equipment request form' : 'Form permintaan Alat Pelindung Diri'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="apd-form" onsubmit="submitRequestAPD(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'PPE Type' : 'Jenis APD'}</label>
-                                    <select name="apd_type" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${currentLanguage === 'en' ? 'Select PPE Type' : 'Pilih Jenis APD'}</option>
-                                        <option value="Helm Safety">${currentLanguage === 'en' ? 'Safety Helmet' : 'Helm Safety'}</option>
-                                        <option value="Kacamata Safety">${currentLanguage === 'en' ? 'Safety Googles' : 'Kacamata Safety'}</option>
-                                        <option value="Masker">Masker</option>
-                                        <option value="Earplug/Earmuff">Earplug/Earmuff</option>
-                                        <option value="Sarung Tangan">${currentLanguage === 'en' ? 'Hand Gloves' : 'Sarung Tangan'}</option>
-                                        <option value="Sepatu Safety">${currentLanguage === 'en' ? 'Safety Shoes' : 'Sepatu Safety'}</option>
-                                        <option value="Rompi Safety">${currentLanguage === 'en' ? 'Safety Vest' : 'Rompi Safety'}</option>
-                                        <option value="Full Body Harness">Full Body Harness</option>
-                                        <option value="Respirator">Respirator</option>
-                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Quantity' : 'Jumlah'}</label>
-                                    <input type="number" name="quantity" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="1">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Size (if present)' : 'Ukuran (jika ada)'}</label>
-                                    <select name="size" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${currentLanguage === 'en' ? 'Select Size' : 'Pilih Ukuran'}</option>
-                                        <option value="S">S</option>
-                                        <option value="M">M</option>
-                                        <option value="L">L</option>
-                                        <option value="XL">XL</option>
-                                        <option value="XXL">XXL</option>
-                                        <option value="Free Size">Free Size</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
-                                    <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_department')}</option>
-                                        ${getDepartmentOptions()}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Request Reason' : 'Alasan Permintaan'}</label>
-                                <select name="reason" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                    <option value="">${currentLanguage === 'en' ? 'Select Reason' : 'Pilih Alasan'}</option>
-                                    <option value="Baru - Belum Punya">${currentLanguage === 'en' ? 'New - Not Yet Available' : 'Baru - Belum Punya'}</option>
-                                    <option value="Penggantian - Rusak">${currentLanguage === 'en' ? 'Replacement - Damaged' : 'Penggantian - Rusak'}</option>
-                                    <option value="Penggantian - Hilang">${currentLanguage === 'en' ? 'Replacement - Lost' : 'Penggantian - Hilang'}</option>
-                                    <option value="Penggantian - Tidak Layak">${currentLanguage === 'en' ? 'Replacement - Unusable' : 'Penggantian - Tidak Layak Pakai'}</option>
-                                </select>
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Additional Information' : 'Keterangan Tambahan'}</label>
-                                <textarea name="notes" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Add information if needed' : 'Tambahkan keterangan jika diperlukan'}"></textarea>
-                            </div>
-                            <button type="submit" id="apd-submit-btn" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all">
-                                ${t('btn_submit_apd')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('request-apd', {});
         }
 
         async function submitRequestAPD(e) {
@@ -1990,56 +1379,9 @@
         }
 
         // Saran Lainnya
-        function renderSaranLainnya() {
+        async function renderSaranLainnya() {
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-gray-800">${currentLanguage === 'en' ? '💬 Other Suggestions' : '💬 Saran Lainnya'}</h1>
-                        <p class="text-gray-500">${currentLanguage === 'en' ? 'Provide suggestions and ideas for safety improvements' : 'Berikan saran, masukan, atau ide untuk perbaikan K3'}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <form id="saran-form" onsubmit="submitSaranLainnya(event)">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggestion Category' : 'Kategori Saran'}</label>
-                                    <select name="category" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_category')}</option>
-                                        <option value="Perbaikan Prosedur K3">${currentLanguage === 'en' ? 'Safety Procedure Improvement' : 'Perbaikan Prosedur K3'}</option>
-                                        <option value="Fasilitas K3">${currentLanguage === 'en' ? 'Safety Facilities' : 'Fasilitas K3'}</option>
-                                        <option value="Pelatihan K3">${currentLanguage === 'en' ? 'Safety Training' : 'Pelatihan K3'}</option>
-                                        <option value="Pengecekan Rutin">${currentLanguage === 'en' ? 'Routine Inspection' : 'Pengecekan Rutin'}</option>
-                                        <option value="Perilaku Kerja Aman">${currentLanguage === 'en' ? 'Safe Work Behavior' : 'Perilaku Kerja Aman'}</option>
-                                        <option value="Lainnya">${currentLanguage === 'en' ? 'Others' : 'Lainnya'}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Department' : 'Departemen'}</label>
-                                    <select name="department" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white">
-                                        <option value="">${t('option_select_department')}</option>
-                                        ${getDepartmentOptions()}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Location/Area (Optional)' : 'Lokasi/Area (Opsional)'}</label>
-                                <input type="text" name="location" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Production Area, Warehouse, Office' : 'Contoh: Area Produksi, Gudang, Kantor'}">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggestion Title' : 'Judul Saran'}</label>
-                                <input type="text" name="title" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Example: Add more lighting in work area' : 'Contoh: Tambahan lampu di area kerja'}">
-                            </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">${currentLanguage === 'en' ? 'Suggestion Details' : 'Uraian Saran'}</label>
-                                <textarea name="suggestion" rows="5" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500" placeholder="${currentLanguage === 'en' ? 'Describe your suggestion in detail to improve workplace safety' : 'Jelaskan saran atau ide Anda secara detail untuk meningkatkan K3 di tempat kerja'}"></textarea>
-                            </div>
-                            <button type="submit" id="saran-submit-btn" class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all">
-                                ${t('btn_submit_suggestion')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('saran-lainnya', {});
         }
 
         async function submitSaranLainnya(e) {
@@ -2084,68 +1426,14 @@
         }
 
         // Admin - Manage Reports
-        function renderManageReports() {
+        async function renderManageReports() {
             if (currentUser.role !== 'admin') {
                 navigateTo('dashboard');
                 return;
             }
 
             const content = document.getElementById('content-area');
-            content.innerHTML = `
-                <div class="fade-in">
-                    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-800">⚙️ Kelola Laporan</h1>
-                            <p class="text-gray-500">Kelola dan proses semua laporan yang masuk</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <select id="filter-type" onchange="filterReports()" class="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm">
-                                <option value="">Semua Tipe</option>
-                                <option value="Inspeksi APAR">Inspeksi APAR</option>
-                                <option value="Inspeksi Hydrant">Inspeksi Hydrant</option>
-                                <option value="Inspeksi P3K">Inspeksi P3K</option>
-                                <option value="Inspeksi Peralatan">Inspeksi Peralatan</option>
-                                <option value="Permit Kerja">Permit Kerja</option>
-                                <option value="JSA">JSA</option>
-                                <option value="Kondisi Tidak Aman">Kondisi Tidak Aman</option>
-                                <option value="Request APD">Request APD</option>
-                                <option value="Request P3K">Request P3K</option>
-                            </select>
-                            <select id="filter-status" onchange="filterReports()" class="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm">
-                                <option value="">Semua Status</option>
-                                <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
-                                <option value="Diproses">Diproses</option>
-                                <option value="Selesai">Selesai</option>
-                                <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                <option value="Perlu Isi Ulang">${currentLanguage === 'en' ? 'Needs Refill' : 'Perlu Isi Ulang'}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipe</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pelapor</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dept</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reports-table-body" class="divide-y divide-gray-100">
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="empty-state" class="hidden p-8 text-center text-gray-500">
-                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <p>Belum ada laporan</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            content.innerHTML = await loadMenuPageTemplate('manage-reports', {});
             filterReports();
         }
 
