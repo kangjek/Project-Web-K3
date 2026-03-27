@@ -103,6 +103,35 @@ function createApiOutput(payload, callback) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function sanitizeTemplateName(value) {
+  return (value || '').toString().replace(/[^a-z0-9-]/gi, '');
+}
+
+// Main handler untuk frontend (GET request)
+function doGet(e) {
+  try {
+    const templateParam = sanitizeTemplateName(e && e.parameter ? e.parameter.template : '');
+
+    // Serve fragment template menu: ?template=dashboard
+    if (templateParam) {
+      return HtmlService
+        .createHtmlOutputFromFile(`pages/${templateParam}`)
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
+    // Serve halaman utama SPA
+    return HtmlService
+      .createHtmlOutputFromFile('safetrack')
+      .setTitle('SafeTrack - K3 Reporting System')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    Logger.log('Error di doGet: ' + error.toString());
+    return HtmlService
+      .createHtmlOutput(`<pre>Gagal memuat frontend: ${error.toString()}</pre>`)
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+}
+
 // ===== UPLOAD FOTO KE GOOGLE DRIVE =====
 function uploadPhotoToDrive(base64Data, fileName, mimeType) {
   try {
