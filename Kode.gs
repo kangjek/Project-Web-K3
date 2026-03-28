@@ -19,17 +19,35 @@ function getSpreadsheet() {
 
 function getDriveFolder() {
   try {
-    if (DRIVE_FOLDER_ID && DRIVE_FOLDER_ID !== '1Chtj6DYWgPmhtDJJdS0j6NGnGzWuURhB') {
-      return DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    // Pakai folder ID jika diisi
+    if (DRIVE_FOLDER_ID && String(DRIVE_FOLDER_ID).trim() !== '') {
+      const folder = DriveApp.getFolderById(String(DRIVE_FOLDER_ID).trim());
+      try {
+        folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (shareErr) {
+        Logger.log('Warning setSharing folder: ' + shareErr.toString());
+      }
+      return folder;
     }
-    // Fallback: cari atau buat folder bernama 'SafeTrack Photos'
+
+    // Fallback: cari / buat folder default
     const folders = DriveApp.getFoldersByName('SafeTrack Photos');
     if (folders.hasNext()) {
-      return folders.next();
+      const existing = folders.next();
+      try {
+        existing.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (shareErr) {
+        Logger.log('Warning setSharing existing folder: ' + shareErr.toString());
+      }
+      return existing;
     }
+
     const newFolder = DriveApp.createFolder('SafeTrack Photos');
-    // Jadikan folder bisa diakses siapa saja dengan link
-    newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    try {
+      newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (shareErr) {
+      Logger.log('Warning setSharing new folder: ' + shareErr.toString());
+    }
     return newFolder;
   } catch (e) {
     Logger.log('Error getDriveFolder: ' + e.toString());
@@ -135,27 +153,36 @@ function doGet(e) {
 // ===== UPLOAD FOTO KE GOOGLE DRIVE =====
 function uploadPhotoToDrive(base64Data, fileName, mimeType) {
   try {
-    // Hapus prefix data URL jika ada (contoh: "data:image/jpeg;base64,")
-    const base64Clean = base64Data.replace(/^data:[^;]+;base64,/, '');
-    
-    // Decode base64 ke bytes
+    if (!base64Data) throw new Error('base64Data kosong');
+
+    const safeName = (fileName || 'photo.jpg').toString().replace(/[^\w.\-]/g, '_');
+    const safeMime = (mimeType || 'image/jpeg').toString();
+
+    // Hapus prefix data URL jika ada
+    const base64Clean = String(base64Data).replace(/^data:[^;]+;base64,/, '');
     const bytes = Utilities.base64Decode(base64Clean);
-    const blob = Utilities.newBlob(bytes, mimeType || 'image/jpeg', fileName);
-    
-    // Upload ke folder Drive
+    const blob = Utilities.newBlob(bytes, safeMime, safeName);
+
     const folder = getDriveFolder();
     const file = folder.createFile(blob);
-    
-    // Set permission: siapa saja dengan link bisa lihat
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    
-    // Return URL langsung (untuk tampil di browser)
+
+    // Upayakan agar dapat diakses publik via link (kalau policy mengizinkan)
+    try {
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (shareErr) {
+      Logger.log('Warning setSharing file: ' + shareErr.toString());
+      // Tetap lanjutkan; file tetap tersimpan
+    }
+
     const fileId = file.getId();
     return {
       success: true,
       fileId: fileId,
+      name: file.getName(),
+      mimeType: file.getMimeType(),
       viewUrl: `https://drive.google.com/file/d/${fileId}/view`,
-      directUrl: `https://drive.google.com/uc?export=view&id=${fileId}`
+      directUrl: `https://drive.google.com/uc?export=view&id=${fileId}`,
+      downloadUrl: `https://drive.google.com/uc?export=download&id=${fileId}`
     };
   } catch (error) {
     Logger.log('Error uploadPhotoToDrive: ' + error.toString());
@@ -174,6 +201,18 @@ function doPost(e) {
     if (data.action === 'uploadPhoto') {
       if (!data.base64 || !data.fileName) {
         return createApiOutput({ status: 'error', message: 'Data foto tidak lengkap' });
+      }
+
+      // Opsional: validasi ukuran file jika frontend mengirimkan `size` (bytes)
+      if (typeof data.size !== 'undefined' && data.size !== null && data.size !== '') {
+        const sizeNum = Number(data.size);
+        const maxBytes = 2 * 1024 * 1024; // 2MB
+        if (!Number.isFinite(sizeNum) || sizeNum < 0) {
+          return createApiOutput({ status: 'error', message: 'Nilai size tidak valid' });
+        }
+        if (sizeNum > maxBytes) {
+          return createApiOutput({ status: 'error', message: 'Ukuran file melebihi batas 2MB' });
+        }
       }
       
       const result = uploadPhotoToDrive(
